@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+
+{% block title %}Transactions{% endblock %}
+
+{% block scripts %}
+<link rel="stylesheet" href="/files/css/jquery.autocomplete.css"></link>
+<script type="text/javascript" src="/files/js/jquery.bgiframe.min.js"></script>
+<script type="text/javascript" src="/files/js/jquery.autocomplete.js"></script>
+
+<script type="text/javascript">
+
+$(document).ready(function () {
+		
+	$("#search-transaction-button").click(function() {
+		$("#search-form").submit();
+	});
+
+    $(".decline").live('click', function() {
+        var get = { };
+        var element = $(this);
+        
+        get.validate = 0;
+        get.transaction = $(this).attr('id');
+        
+        $.get('/admin/ajax/transaction/validate', get, function(response) {
+            if(response.status == 'ok')
+            {
+                element.removeClass('decline');
+                element.addClass('approve');
+                element.text('Approve');
+            }
+            else
+            {
+                $("ul.errors").children().remove();
+                for(var i = 0; i < response.errors.length; i++)
+                {
+                    $("ul.errors").append("<li>"+response.errors[i]+"</li>");
+                }
+                $(".errors").show();
+                $(window).scrollTop($('html').offset().top)
+            }
+        });
+    });
+                               
+    $(".approve").live('click', function() {
+        var get = { };
+        var element = $(this);
+        
+        get.validate = 1;
+        get.transaction = $(this).attr('id');
+        
+        $.get('/admin/ajax/transaction/validate', get, function(response) {
+            if(response.status == 'ok')
+            {
+                element.removeClass('approve');
+                element.addClass('decline');
+                element.text('Decline');
+            }
+            else
+            {
+                $("ul.errors").children().remove();
+                for(var i = 0; i < response.errors.length; i++)
+                {
+                    $("ul.errors").append("<li>"+response.errors[i]+"</li>");
+                }
+                $(".errors").show();
+                $(window).scrollTop($('html').offset().top)
+            }
+        });
+    });
+        
+});
+
+</script>
+{% endblock %}
+
+{% block content %}
+{% if allowed %}
+<div class="dashboard-utility">
+	<div id="search-transaction">
+		<form id="search-form" method="POST" action="/admin/transactions">
+		{% csrf_token %}
+		<input type="textbox" id="search" name="transaction" value="{{search}}"/>
+		<div class="form-button" id="search-transaction-button">Search</div>
+		</form>
+	</div>
+	<ul class="errors">
+	</ul>
+	<table>
+		<tr>
+			<th>Transaction ID</th>
+			<th>User</th>
+			<th>Package</th>
+			<th>Expires</th>
+			<th>Price</th>
+			<th>Type</th>
+	        <th>Approve</th>
+		</tr>
+		{% for transaction in transactions %}
+		<tr class="{% cycle 'odd' 'even' %}">
+			<td><span>{{transaction.id}}</span></td>
+			<td><span>{{transaction.user.username}} ({{transaction.user.id}})</span></td>
+			<td><span>{{transaction.package.name}} ({{transaction.package.id}})</span></td>
+			<td><span>{{transaction.expires}}</span></td>
+			<td><span>${{transaction.price|floatformat:2}}</span></td>
+			<td>
+			{% for type in transaction_types %}
+			{% if type.0 == transaction.type %}
+			<span>{{type.1}}</span>
+			{% endif %}
+			{% endfor %}
+			</td>
+	        <td>
+	            {% if transaction.valid %}
+	            <a class="decline" id="{{transaction.id}}" href="#">Decline</a>
+	            {% else %}
+	            <a class="approve" id="{{transaction.id}}" href="#">Approve</a>
+	            {% endif %}
+	        </td>
+		</tr>
+		{% endfor %}
+	</table>
+</div>
+{% else %}
+<div class="dashboard-utility">
+	<h2>Invalid permissions</h2>
+</div>
+{% endif %}
+{% endblock %}

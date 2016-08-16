@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+
+{% block title %}Funds{% endblock %}
+
+{% block scripts %}
+<script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8/jquery-ui.min.js"></script>
+<link rel="stylesheet" href="/files/css/jquery.autocomplete.css"></link>
+<script type="text/javascript" src="/files/js/jquery.bgiframe.min.js"></script>
+<script type="text/javascript" src="/files/js/jquery.autocomplete.js"></script>
+
+<script type="text/javascript">
+
+	$(document).ready(function () {
+	
+		var search_url;
+		
+		$("#datepicker").datepicker();
+		
+		$('input#search').autocomplete('/admin/ajax/find/group', {
+			dataType: 'json',
+			parse: function(data) {
+                return $.map(data, function(row) {
+                    return { data:row, value:row[1], result:row[0] };
+                });
+            }
+		
+		}).result(function(e, data, value){ 
+			$('#contributer').val(data[1]);
+		});
+		
+		$('#search-fund-button').click(function(){
+			if($('input#contributer').val() != '')
+			{
+				$('#search-form').submit();
+			}
+		});
+		
+	});
+</script>
+{% endblock %}
+{%block content %}
+{% if allowed %}
+<div class="dashboard-utility">
+	<div class="form-button"><a href="/admin/fund/add">Add Fund</a></div>
+    <div id="download-funds"><a href="/admin/download/funds">Download Funds CSV</a></div>
+	<div id="search-fund">
+		<form id="search-form" method="POST" action="/admin/funds">
+		<input type="hidden" name="contributer" id="contributer" value="" />
+		{% csrf_token %}
+		<input type="textbox" id="search" name="search" class="ui-autocomplete" value="{{search}}"/>
+		<div class="form-button" id="search-fund-button">
+			Search
+		</div>
+		</form>
+	</div>
+</div>
+<section id="funds-data">
+	<table class="data funds">
+		<tr>
+			<th id="company-name"><a href="/admin/funds/0/name/{% if asc == 'asc' %}desc{% else %}asc{% endif %}">Company Name</a></th>
+			<th id="funds-name"><a href="/admin/funds/0/contributer/{% if asc == 'asc' %}desc{% else %}asc{% endif %}">Fund Name</a></th>
+			<th id="funds-type">Fund Type</th>
+			<th id="funds-category">Category</th>
+			<th id="funds-code">Fund Code</th>
+			<th id="funds-classification">Classification</th>
+			<th id="funds-company-type">Company Type</th>
+		</tr>
+		
+		{% for fund in funds %}
+		<tr class="{% cycle 'odd' 'even' %}">
+			<td><a href="/admin/fund/edit/{{fund.id}}">{{fund.contributer.name}}</a></td>
+			<td><a href="/admin/fund/edit/{{fund.id}}">{{fund.name}}</a></td>
+			<td><a href="/admin/fund/edit/{{fund.id}}">{{fund.type.name}}</a></td>
+			<td><a href="/admin/fund/edit/{{fund.id}}">{{fund.category.name}}</a></td>
+			<td><a href="/admin/fund/edit/{{fund.id}}">{{fund.code|upper}}</a></td>
+			<td><a href="/admin/fund/edit/{{fund.id}}">{{fund.classification.name}}</a></td>
+			<td><a href="/admin/fund/edit/{{fund.id}}">{{fund.company_type.name}}</a></td>
+		</tr>
+		{% endfor %}
+	</table>
+	<div class="dashboard-utility nav">
+		{% for nav in pagination %}
+			{% if nav.index == offset %}
+				<span>{{nav.name}}</span>
+			{% else %}
+				<a href="/admin/funds/{{nav.index}}/{{order}}/{{asc}}">{{nav.name}}</a>
+			{% endif %}
+		{% endfor %}
+	</div>
+</div>
+</section>
+	{% else %}
+	<div class="dashboard-utility">
+		<h2>Invalid permissions.</h2>
+	</div>			
+	{% endif %}
+{% endblock %}

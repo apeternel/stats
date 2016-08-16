@@ -1,0 +1,196 @@
+{% extends "base.html" %}
+
+{%block title %}Consumer Sign Up{% endblock %}
+
+{%block scripts %}
+<script type="text/javascript" src="/files/js/validation.js"></script>
+<script>
+$(document).ready(function(){
+							
+	$('div#signup').click(function(){
+									
+		var errors = false;
+		var get = { };
+		
+		$("ul.errors").children().remove();
+		$("ul.errors").hide();
+		
+		get.username = $("input[name=username]").val();
+		get.email = $("input[name=email]").val();
+		get.password = $("input[name=password]").val();
+		get.passwordConfirm = $("input[name=confirm_password]").val();
+		get.firstName = $("input[name=first_name]").val();
+		get.lastName = $("input[name=last_name]").val();
+		get.company = $("input[name=company]").val();
+		get.department = $("input[name=department]").val();
+		get.position = $("input[name=position]").val();
+		get.telephone = $("input[name=phone]").val();
+		get.ext = $("input[name=ext]").val();
+		
+		if(!validate_user(get.username))
+		{
+			errors = true;
+			$("ul.errors").append("<li>The username is invalid.</li>");
+		}
+		
+		if(get.username.length == 0) {
+			errors = true;
+			$("ul.errors").append("<li>You must enter a username.</li>");
+		} else {
+			if(!validate_user(get.username)) {
+				errors = true;
+				$("ul.errors").append("<li>A user must be atleast 6 characters and contain letters and numbers.</li>");
+			}		
+		}
+		
+		if(!validate_email(get.email))
+		{
+			errors = true;
+			$("ul.errors").append("<li>Email is invalid.</li>");
+		}
+		
+		if(get.password.length == 0) {
+			errors = true;
+			$("ul.errors").append("<li>You need to enter a password for the user.</li>");
+		} else {
+			if(!validate_pwd(get.password)) {
+				errors = true;
+				$("ul.errors").append("<li>Password must be atleast 6 characters and contain only letters and numbers.</li>");
+			}
+		}
+		
+		if(get.passwordConfirm.length == 0) {
+			errors = true;
+			$("ul.errors").append("<li>You must confirm the user password.</li>");
+		}
+		
+		if(get.password != get.passwordConfirm) {
+			errors = true;
+			$("ul.errors").append("<li>Passwords don't match.</li>");
+		}
+		
+		if(get.firstName.length == 0 || get.firstName.length > 30)
+		{
+			errors = true;
+			$("ul.errors").append("<li>First name is an invalid length</li>");
+		}
+									
+		if(get.lastName.length == 0 || get.lastName.length > 30)
+		{
+			errors = true;
+			$("ul.errors").append("<li>Last name is an invalid length</li>");
+		}
+									
+		if(get.company.length == 0)
+		{
+			errors = true;
+			$("ul.errors").append("<li>Company must be entered.</li");
+		}
+									
+		if(get.company.length > 128)
+		{
+			errors = true;
+			$("ul.errors").append("<li>Company length is too long.</li>");
+		}
+									
+		if(get.department.length == 0)
+		{
+			errors = true;
+			$("ul.errors").append("<li>Department must be entered.</li>");
+		}
+		
+		if(get.department.length > 128)
+		{
+			errors = true;
+			$("ul.errors").append("<li>Department length is too long.</li>");
+		}
+		
+		if(get.position.length == 0)
+		{
+			errors = true;
+			$("ul.errors").append("<li>Position must be entered.</li>");
+		}
+									
+		if(get.position.length > 128)
+		{
+			errors = true;
+			$("ul.errors").append("<li>Position length is too long.</li>");
+		}
+									
+		if(get.telephone.length < 7 || get.telephone.length > 14)
+		{
+			errors = true;
+			$("ul.errors").append("<li>Telephone is invalid.</li>");
+		}
+									
+		if(get.ext.length > 8)
+		{
+			errors = true;
+			$("ul.errors").append("<li>Extension must be less then 8 numbers.</li>");
+		}
+		
+		if(errors)
+		{
+			$(".errors").show();
+		}
+		else
+		{
+			$('#consumer-signup-form').submit();
+		}							
+		
+	});
+});
+</script>
+{% endblock %}
+
+{% block content %}
+<div id="sign-up">
+	<form method="POST" action="/consumer/signup" id="consumer-signup-form">
+		<div class="errors">
+			<ul class="errors">
+			{% for error in errors %}
+				<li>{{error}}</li>
+			{% endfor %}
+			</ul>
+		</div>
+		<div class="clear-float"></div>
+		{% csrf_token %}
+		<h1>Consumer Sign Up</h1>
+		<div class="input">
+			<label>Username: </label><input type="text" name="username" id="username" value="{{request.POST.username}}"/>
+		</div>
+		<div class="input">
+			<label>Email: </label><input type="text" name="email" id="email" value="{{request.POST.email}}"/>
+		</div>
+		<div class="input">
+			<label>Password: </label><input type="password" name="password" id="password" />
+		</div>
+		<div class="input">
+			<label>Confirm Password: </label><input type="password" name="confirm_password" id="confirm_password" />
+		</div>
+		<div class="input">
+			<label>First Name: </label><input type="text" name="first_name" id="first-name" value="{{request.POST.first_name}}"/>
+		</div>
+		<div class="input">
+			<label>Last Name: </label><input type="text" name="last_name" id="last-name" value="{{request.POST.last_name}}"/>
+		</div>
+		<div class="input">
+			<label>Company: </label><input type="text" name="company" id="company" value="{{request.POST.company}}"/>
+		</div>
+		<div class="input">
+			<label>Department: </label><input type="text" name="department" id="department" value="{{request.POST.department}}"/>
+		</div>
+		<div class="input">
+			<label>Position: </label><input type="text" name="position" id="position" value="{{request.POST.position}}"/>
+		</div>
+		<div class="input">
+			<label>Telephone: </label><input type="text" name="phone" id="phone" value="{{request.POST.phone}}" />
+		</div>
+		<div class="input">
+			<label>Ext.</label><input type="text" name="ext" id="ext" value="{{request.POST.ext}}"/>
+		</div>
+		<div class="clear-float"></div>
+		<div class="form-button" id="signup">Sign up</div>
+	</form>
+</div>
+{% endblock %}

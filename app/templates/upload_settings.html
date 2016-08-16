@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block title %}Funds{% endblock %}
+
+{% block scripts %}
+<script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8/jquery-ui.min.js"></script>
+<link rel="stylesheet" href="/files/css/jquery.autocomplete.css"></link>
+<script type="text/javascript" src="/files/js/jquery.bgiframe.min.js"></script>
+<script type="text/javascript" src="/files/js/jquery.autocomplete.js"></script>
+
+<script type="text/javascript">
+$(document).ready(function() {
+	$("#upload-month").datepicker({dateFormat: 'yy-mm-dd'});
+	$("#cutoff-date").datepicker({dateFormat: 'yy-mm-dd'});
+	$('#report-view-date').datepicker({dateFormat: 'yy-mm-dd'});
+	
+	$('div#upload-settings').click(function() {
+		
+		var get = { };
+		
+		get.upload_month = $('#upload-month').val();
+		get.cutoff_date = $('#cutoff-date').val();
+		get.report_view_date = $('#report-view-date').val();
+		if(get.upload_month && get.cutoff_date)
+		{
+			$.get('/admin/ajax/upload/settings', get, function(response) {
+				$('#settings').show();
+			});
+		}
+		else
+		{
+
+		}
+	});
+});
+
+
+</script>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-utility">
+<div id="settings">Settings have been updated.</div>
+<div class="input settings">
+	<label>Set Current Upload Month:</label> <input type="text" id="upload-month" name="upload_month" value="{{upload_month}}" /></input>
+</div>
+<div class="input settings">
+	<label>Set Upload Cutoff Date:</label> <input type="text" id="cutoff-date" name="cut_off_date" value="{{cutoff_date}}" /></input>
+</div>
+<div class="input settings">
+	<label>Report View Date:</label> <input type="text" id="report-view-date" name="report_view_date" value="{{report_view_date}}" /></input>
+</div>
+
+<div class="form-button" id="upload-settings">Save Settings</div>
+</div>
+{% endblock %}

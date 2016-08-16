@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+
+{%block title %}Logs{% endblock %}
+
+
+{%block scripts %}
+
+{% endblock %}
+
+{% block content %}
+{% if allowed %}
+<table class="data">
+	<tr>
+		<th>User</th>
+		<th>Date/Time</th>
+		<th>IP Address</th>
+	</tr>
+	{% for user_log in user_logs %}
+	<tr class="{% cycle 'odd' 'even' %}">
+		<td><span>{{user_log.user.username}}</span></td>
+		<td><span>{{user_log.datetime}}</span></td>
+		<td><span>{{user_log.ip_address}}</span></td>
+	</tr>
+	{% endfor %}
+</table>
+{% else %}
+<div class="dashboard-utility">
+	<h2>Invalid permissions</h2>
+</div>
+{% endif %}
+{% endblock %}

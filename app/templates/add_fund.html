@@ -1,0 +1,442 @@
+{% extends "base.html" %}
+
+{%block title %}{{title}}{% endblock %}
+
+{% block scripts %}
+<script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8/jquery-ui.min.js"></script>
+<link rel="stylesheet" href="/files/css/jquery.autocomplete.css"></link>
+<script type="text/javascript" src="/files/js/jquery.bgiframe.min.js"></script>
+<script type="text/javascript" src="/files/js/jquery.autocomplete.js"></script>
+<script type="text/javascript">
+	$(document).ready(function() {
+	
+		if($("#investment-type").val() == 'select' || $("#investment-type").val() == 1) {
+			$("#fund-relationships").css("display", "none");
+		}
+	
+		$('#fund-code').keyup( function() {
+										
+			if(!$(this).hasClass("readonly")) {
+			
+				var get = { };
+				
+				get.code = $('#fund-code').val();
+				
+				get.code = get.code.replace(" ", "");
+				consolg.log('der');
+				if(get.code.length <= 3)
+				{
+				
+					$.get('/admin/ajax/check/fund/code', get, function(data) 
+					{
+						if(data.status == 'ok')
+						{
+							$('#code-availability').html('OK');
+							$('#code-availability').removeClass('error');
+							$('#code-availability').addClass('ok');
+							$('#code-check').val(1);
+						}
+						else
+						{	
+							$('#code-availability').html("INVALID");
+							$('#code-availability').removeClass('ok');
+							$('#code-availability').addClass('error');
+							$('#code-check').val(0);
+						}
+					});
+				} else {
+					$('#code-availability').html("INVALID");
+					$('#code-availability').removeClass('ok');
+					$('#code-availability').addClass('error');
+					$('#code-check').val(0);
+				}
+			}
+		});
+	
+		$("#datepicker").datepicker({dateFormat: 'yy-mm-dd'});
+	
+		$('#cancel-fund').click(function(){
+			window.location = '/admin/funds'
+			
+			
+		});
+		$('input#search').autocomplete('/admin/ajax/find/group', {
+			dataType: 'json',
+			parse: function(data) {
+                return $.map(data, function(row) {
+                    return { data:row, value:row[1], result:row[0] };
+                });
+            },
+		
+		}).result(function(e, data, value){
+			$('#contributer').val(data[1]);
+			$('span#contributer-code').html(data[2]);
+			$('input#contributer-code').val(data[2]);
+			
+			$('#fund-input').show();
+		});
+		
+		$('#search-contributer-button').click(function(){
+			$('#search-form').submit();
+		});
+	
+		var extra_params = { };		
+		
+		// @TODO: Disable auto complete if fund is not active
+		$('input#find-fund').autocomplete('/admin/ajax/find/fund', {
+			dataType: 'json',
+			parse: function(data) {
+                return $.map(data, function(row) {
+                    return { data:row, value:row[1], result:row[0] };
+                });
+            },
+            extraParams: {type: function() { return $('#investment-type').val(); }, contributer: function() { return $('#contributer').val(); }}
+		}).result(function(e, data, value){
+		
+			$('#fund-relationship').val(data);
+			$('#fund-relationship').attr('rel', data.join(':'));
+			
+			
+		}).flushCache();
+	
+		// Adds fund to this fund
+		$('div#add-fund-button').click(function(){
+		
+			var data = $('#fund-relationship').attr('rel').split(':');
+			var rel = $('#fund-relationship').attr('rel');
+			$('ul.errors').children().remove();
+			
+			if(data)
+			{
+				if($('li#' + data[1]).length != 0)
+				{ 
+					$('ul.errors').append('<li>Fund has already been added.</li>');
+				}
+				else
+				{
+					if(data[0] != '')
+						$('ul#fund-list').append('<li rel="' + rel + '" id="' + data[1] + '">' + data[0] + ' (' + data[2] + ') <a href="#" id="' + data[1] + '" class="delete-relationship">Delete</a></li>');
+				}
+			}
+			
+		});
+	
+		$('#save-fund').click(function() {
+			
+			var errors = false;
+			var related = false;
+			{% if related %}
+			related = true;
+			{% endif %}
+			var get = { };
+			
+			get.name = $.trim($("#fund-name").val());
+			get.fund_code = $.trim($("#fund-code").val());
+			get.registrationDate = $.trim($("#datepicker").val());
+			get.active = $('input[name="active"]:checked').val();
+			get.index = $('input[name="index"]:checked').val();
+			get.rrsp = $('input[name="rrsp"]:checked').val();
+			get.sales_fee = $('#sales-fee').val();
+			get.comments = $('#comments').val();
+			get.contributer = $("#contributer-code").attr('value');
+			get.company_type = $('#company-type').val();
+			get.category = $('#fund-category').val();
+			get.classification = $('#classification').val();
+			get.investment_type = $('#investment-type').val();
+			get.type = $('#fund-type').val();
+			get.funds;
+			
+			$("ul.errors").children().remove();
+			$('input').removeClass('errors');
+			$('textarea').removeClass('errors');
+			$('select').removeClass('errors');
+			
+			if(get.name.length == 0) {
+				errors = true;
+				$("ul.errors").append("<li>Fund name must contain characters.</li>");
+				$("#fund-name").addClass('errors');
+			}
+			
+			if(get.fund_code.length > 3) {
+				errors = true;
+				$("ul.errors").append("<li>Fund code must be less than three characters long.</li>");
+				$("#fund-code").addClass('errors');
+			}
+			
+			if(!$("#code-check").val()) {
+				errors = true;
+				$("ul.errors").append("<li>Fund Code must be valid.</li>");
+			}
+			
+			if(!get.registrationDate) {
+				errors = true;
+				$("ul.errors").append("<li>You must select a registration date.</li>");
+				$("#datepicker").addClass('errors');
+			}
+			
+			if(!get.active) {
+				errors = true;
+				$("ul.errors").append("<li>You must select an active value.</li>");
+			}
+			
+			if(!get.index) {
+				errors = true;
+				$("ul.errors").append("<li>You must select an indexed value</li>");
+			}
+			
+			if(!get.rrsp) {
+				errors = true;
+				$("ul.errors").append("<li>You must select a RRSP eligible value.</li>");
+			}
+			
+			if(get.sales_fee == "select") {
+				errors = true;
+				$("ul.errors").append("<li>You must select a sales fee.</li>");
+				$('#sales-fee').addClass('errors');
+			}
+			
+			if(get.contributer.length > 3) {
+				errors = true;
+				$("ul.errors").append("<li>You must have a valid contributer.</li>");
+				$('input[name=group_name]').addClass('errors');
+			}
+			
+			if(get.company_type == "select") {
+				errors = true;
+				$("ul.errors").append("<li>You must select a company type.</li>");
+				$('#company-type').addClass('errors');
+			}
+			
+			if(get.category == "select") {
+				errors = true;
+				$("ul.errors").append("<li>You must select a fund category.</li>");
+				$('#fund-category').addClass('errors');
+			}
+			
+			if(get.classification == "select") {
+				errors = true;
+				$("ul.errors").append("<li>You must select a fund classification</li>");
+				$('#classification').addClass('errors');
+			}
+			
+			if(get.investment_type == "select") {
+				errors = true;
+				$("ul.errors").append("<li>You must select an investment type.</li>");
+				$('#investment-type').addClass('errors');
+			}
+			
+			if(get.type == "select") {
+				errors = true;
+				$("ul.errors").append("<li>You must select a fund type.</li>");
+				$('#fund-type').addClass('errors');
+			}
+			
+			get.classification = $('#classification').val();
+			get.investment_type = $('#investment-type').val();
+			get.type = $('#classification').val();
+			
+			var funds = new Array();
+			
+			if($('input[id="active-no"]:checked').val() == 0)
+			{
+				$('#fund-list > li').remove();
+			}
+			
+			$('#fund-list li').each(function(index, li) 
+			{
+				funds.push(parseInt($(this).attr('id')));
+			});
+			
+			if($('#contributer').val())
+			{
+				if(funds.length > 0) {
+					$('#funds').val(funds);
+				}	
+			}
+			
+			var confirmValue = false;
+			
+			if (related && get.active == 0) {
+				confirmValue = confirm("De-activating this fund will cause it to be removed from several fund of funds");
+				if (confirmValue == false) {
+					errors = true;
+					$('ul.errors').append("<li>You cancelled the confirmation.</li>");
+				}
+			}
+										
+			if(!errors) 
+			{
+				$('#fund-form').submit();
+			}
+										
+		});	
+		
+		$('a.delete-relationship').live("click", function(e){
+			var id = $(this).attr('id');
+			$('li#' + id).remove();
+			return true;
+		});
+	
+		var investmentType = $("#investment-type").val();
+	
+		$('#investment-type').change(function() {
+			var answer = confirm('Changing the investment type on this fund will remove all associated funds.  Do you want to continue?');
+			
+			if(answer)
+			{
+			 	$('#fund-list > li').remove();
+				investmentType = $(this).val();
+			} else {
+				$(this).val(investmentType);
+			}
+		
+		});
+		
+		$("select#investment-type").change( function() {
+			if($(this).val() == 1 || $(this).val() == 'select') {
+				$("#fund-relationships").hide();
+			} else {
+				$("#fund-relationships").show();
+			}
+		});
+	
+	
+	});
+
+</script> 
+{% endblock %}
+
+{% block content %}
+{% if allowed %}
+<div class="dashboard-utility">
+	<section id="add-fund">
+		{% if errors|length != 0 %}
+			<ul class="errors">
+				{% for error in errors %}
+					<li>{{error}}</li>
+				{% endfor %}
+			</ul>
+		{% endif %}
+		{% if action %}
+			<div>
+				{{action}}
+			</div>
+		{% endif %}
+		<form method="POST" id="fund-form" action={% if edit %}"/admin/fund/edit/{{fund.id}}"{% else %}"/admin/fund/add"{% endif %}>
+			<input type="hidden" id="fund-relationship" value="" rel=""/>
+			<input type="hidden" id="funds" name="funds[]" value="" />
+			<input type="hidden" id="code-check" name="code-check" value={% if edit %}"1"{% else %}"0"{% endif %}/>
+			{% csrf_token %}
+			<input type="hidden" id="contributer" name="contributer" value="{% if edit %}{{fund.contributer.id}}{% else %}{{request_post.contributer}}{% endif %}" />
+			<input type="hidden" id="contributer-code" name="contributer_code" value="{% if edit %}{{fund.contributer.code}}{% else %}{{request_post.contributer_code}}{% endif %}" />
+			<div id="fund-group">
+				<h2>Group:</h2>
+				<div class="input left"><label>Group Name</label>{% if edit %}<input disabled="disabled" type="textbox" id="search" name="group_name" class="ui-autocomplete" value="{{fund.contributer.name}}"/>{% else %}<input type="textbox" id="search" name="group_name" class="ui-autocomplete" value="{{request_post.group_name}}"/>{% endif %}</div>
+				<div class="input"><label>Group code:</label><input type="textbox" disabled="disabled" id="contributer-code" value="{% if edit %}{{fund.contributer.code}}{% endif %}">{% if not edit %}{{request_post.contributer_code}}{% endif %}</input></div>
+			</div>
+			<div id="fund-input">
+				<h2>Fund Data:</h2>
+				<div class="input left">
+					<label>Fund Name: </label><input type="text" name="fund_name" id="fund-name" value="{% if edit %}{{fund.name}}{% else %}{{request_post.fund_name}}{% endif %}" />
+				</div>
+				<div class="input">
+					<label>Fund Code: </label><input {% if edit %}class="readonly" readonly="readonly"{% endif %} maxlength="3" type="text" name="fund_code" id="fund-code" value="{% if edit %}{{fund.code}}{% else %}{{request_post.fund_code}}{% endif %}"/><span id="code-availability"></span> 
+				</div>
+				<div class="input left">
+					<label>Fund Type</label>
+					<select id="fund-type" name="fund_type">
+							<option value="select">SELECT</option>
+						{% for fund_type in fund_types %}
+							<option value="{{fund_type.id}}" {% if edit %}{% if fund.type_id == fund_type.id %}selected="selected"{% endif %}{% endif %}>{{fund_type.name}}</option>
+						{% endfor %}
+					</select>
+				</div>
+				<div class="input">
+					<label>Fund Category</label>
+					<select id="fund-category" name="fund_category">
+							<option value="select">SELECT</option>
+						{% for fund_category in fund_categories %}
+							<option value="{{fund_category.id}}" {% if edit %}{% if fund.category_id == fund_category.id %}selected="selected"{% endif %}{% endif %}>{{fund_category.name}}</option>
+						{% endfor %}
+					</select>
+				</div>
+				<div class="input left">
+					<label>Registration Date: </label><input type="text" id="datepicker" name="registration_date" value="{% if edit %}{{registration_date|date:"Y-m-d"}}{% else %}{{default_date|date:"Y-m-d"}}{% endif %}" />
+				</div>
+				<div class="input">
+					<label>Company Structure: </label>
+					<select id="company-type" name="company_type">
+							<option value="select">SELECT</option>
+						{% for company_type in company_types %}
+							<option value="{{company_type.id}}" {% if edit %}{% if fund.company_type.id == company_type.id %}selected="selected"{% endif %}{% endif %}>{{company_type.name}}</option>
+						{% endfor %}
+					</select>
+				</div>
+				<div class="input left">
+					<label>Classification: </label>
+					<select id="classification" name="classification">
+							<option value="select">SELECT</option>
+						{% for classification in classifications %}
+							<option value="{{classification.id}}" {%if edit %}{% if fund.classification.id == classification.id %}selected="selected"{% endif %}{% endif %}>{{classification.name}}</option>
+						{% endfor %}
+					</select>
+				</div>
+				<div class="input">
+					<label>Sales Fee: </label>
+					<select id="sales-fee" name="sales_fee">
+							<option value="select">SELECT</option>
+						{% for sales_fee in sales_fees %}
+							<option value="{{sales_fee.0}}" {% if edit %}{% if fund.sales_fee == sales_fee.0 %}selected="selected"{% endif %}{% endif %}>{{sales_fee.1}}</option>
+						{% endfor %}
+					</select>
+				</div>
+				<div class="input left">
+					<label>Indexed: </label>
+					<label class="autosize">Yes: </label><input class="autosize" type="radio" name="index" id="index-yes" value="1" {% if edit %}{% if fund.index %}checked="checked"{% endif %}{% endif %}/> <label class="autosize">No: </label><input class="autosize" id="index-no" type="radio" name="index" value="0"  {% if edit %}{% if not fund.index %}checked="checked"{% endif %}{% endif %}/> 
+				</div>
+				<div class="input">
+					<label>RRSP Eligible: </label>
+					<label class="autosize">Yes: </label><input class="autosize" type="radio" name="rrsp" id="rrsp-yes" value="1"  {% if edit %}{% if fund.rrsp %}checked="checked"{% endif %}{% endif %}/> <label class="autosize">No: </label><input class="autosize" id="rrsp-no" type="radio" name="rrsp" value="0" {% if edit %}{% if not fund.rrsp %}checked="checked"{% endif %}{% endif %}/> 
+				</div>
+				<div class="input left">
+					<label>Investment Types:</label>
+					<select id="investment-type" name="investment_type">
+							<option value="select">SELECT</option>
+						{% for investment_type in investment_types %}
+							<option value="{{investment_type.id}}" {% if edit %}{% if fund.investment_type.id == investment_type.id %}selected="selected"{% endif %}{% endif %}>{{investment_type.name}}</option>
+						{% endfor %}
+					</select>
+				</div>
+				<div class="input">
+					<label>Active: </label>
+					<label class="autosize">Yes:</label><input class="autosize" type="radio" name="active" id="active-yes" {% if edit %}{% if fund.active %}checked="checked"{% endif %}{% endif %} value="1"/>
+					<label class="autosize">No:</label><input class="autosize" type="radio" name="active" id="active-no" {% if edit %}{% if not fund.active %}checked="checked"{% endif %}{% endif %} value="0"/>
+				</div>
+				<div class="large">
+					<label>Comments</label>
+					<textarea id="comments" name="comments">{% if edit %}{{fund.comments}}{% endif %}</textarea>
+				</div>
+			</div>
+			<div id="fund-relationships">
+				<h2>Fund Relationships</h2>
+				<div id="add-fund-of-fund">
+					<label>Find fund: </label><input type="text" id="find-fund" name="fund_search" /> 
+					<div class="form-button" id="add-fund-button">Add Fund Relationship</div>
+				</div>
+				<div id="fund-list-div">
+					<ul id="fund-list">
+					{% if edit %}
+					{% for rfund in fund.funds.all %}
+						<li rel="{{rfund.name}}:{{rfund.id}}:{{rfund.investment_type.name}}:{{rfund.investment_type.id}}" id="{{rfund.id}}"><a href="/admin/fund/edit/{{rfund.id}}">{{rfund.name}} ({{rfund.code}})</a> | <a href="#" id="{{rfund.id}}" class="delete-relationship">Delete</a></li>		
+					{% endfor %}
+					{% endif %}
+					</ul>
+				</div>
+			</div>
+            <div class="form-button" id="cancel-fund">Cancel</div>
+			<div class="form-button" id="save-fund">{% if edit %} Save Fund {% else %}Create Fund{% endif %}</div>
+		</form>
+	</section>
+</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,657 @@
+{% extends "base.html" %}
+{% block title %}List Management{% endblock %}
+
+{% block scripts %}
+<script type="text/javascript">
+	{% if allowed %}
+	$(document).ready(function (){
+
+		{% if type == 'company' %}
+		$('a#add-company').click(function (){
+			$("#add-company-errors").children().remove();
+			$("h2.action").hide();
+			$('div#add-company-form').toggle();
+			$('div#add-company-form').find('input[type="text"]').val("");
+			
+		});
+		
+		$('div#add-company').click(function (){
+											
+			$('input').removeClass('errors');
+											
+			if($('input#company-type').val().length > 0)
+			{
+				if($('input#company-type').val().length >= 128)
+				{
+					$("#add-company-errors").children().remove();
+					$("#add-company-errors").append("<li>The company type is too long.</li>");
+					$('input#company-type').addClass('errors');
+				}
+				else
+				{
+					$('form#add-company').submit();
+				}
+			}
+			else
+			{
+				$("#add-company-errors").children().remove();
+				$("#add-company-errors").append("<li>You must enter a company type.</li>");
+				$('input#company-type').addClass('errors');
+			}
+		});
+		
+		$('a.edit').click(function() {
+			$("#add-company-errors").children().remove();
+			$('div#add-company-form').show();
+			$('input#id').val($(this).attr('id'));
+			
+			var data = $(this).attr('rel');
+			$('#company-type').val(data);
+			
+			$('div#add-company').html('Save Type');
+		});
+		
+		$('div#clear-company').click(function () {
+			$("#add-company-errors").children().remove();
+			$('input#id').val('');
+			$('#company-type').val('');
+			$('div#add-company').html('Add Type');
+			$('input').removeClass('errors');
+		});
+		
+		{% endif %}
+	
+	
+		{% if type == 'fund' %}
+		$('a#add-fund').click(function (){
+			$("#add-fund-errors").children().remove();
+			$("h2.action").hide();
+			$('div#add-fund-form').toggle();
+			$('div#add-fund-form').find('input[type="text"]').val("");
+		});
+		
+		$('div#add-fund').click(function (){
+			
+			$("#add-fund-errors").children().remove();
+			$('input').removeClass('errors');
+			
+			var errors = false;
+			
+			if($('input#fund-type').val().length <= 0) 
+			{
+				errors = true;
+				$("#add-fund-errors").append("<li>Fund type must contain characters.</li>");
+				$('input#fund-type').addClass('errors');
+			}
+			if($('input#fund-code').val().length != 2)
+			{
+				errors = true;
+				$("#add-fund-errors").append("<li>Fund code must be 2 characters long.</li>");
+				$('input#fund-code').addClass('errors');
+			}
+			
+			if(!errors) {
+				$('form#add-fund').submit();	
+			}
+			
+		});
+		
+		$('a.edit').click(function() {
+			$("#add-fund-errors").children().remove();
+			$('div#add-fund-form').show();
+			$('input#id').val($(this).attr('id'));
+			
+			var data = $(this).attr('rel').split(':');
+			
+			$('#fund-type').val(data[0]);
+			$('#fund-code').val(data[1]);
+			$('#fund-code').attr('readonly', true);
+			
+			$('div#add-fund').html('Save Type');
+			
+		});
+		
+		$('div#clear-fund').click(function () {
+			$("#add-fund-errors").children().remove();
+			$('input#id').val('');
+			$('#fund-type').val('');
+			$('#fund-code').attr('readonly', false);
+			$('#fund-code').val('');
+			$('div#add-fund').html('Add Type');
+			$('input').removeClass('errors');
+		});
+		
+		{% endif %}
+			
+		{% if type == 'category' %}
+		$('a#add-category').click(function (){
+			$("#add-category-errors").children().remove();
+			$("h2.action").hide();
+			$('div#add-category-form').toggle();
+			$('div#add-category-form').find('input[type="text"]').val("");
+		});
+		
+		$('div#add-category').click(function (){
+			
+			$("#add-category-errors").children().remove();
+			$('input').removeClass('errors');
+			
+			var errors = false;
+			
+			if($('input#category-type').val().length <= 0)
+			{
+				errors = true;
+				$("#add-category-errors").append("<li>Category type must contain characters.</li>");
+				$('input#category-type').addClass('errors');
+			}
+			if($('input#category-code').val().length > 3 || $("input#category-code").val().length <= 0) {
+				errors = true;
+				$("#add-category-errors").append("<li>Category code must be less then 4 characters long.</li>");
+				$('input#category-code').addClass('errors');
+			}
+			
+			if(!errors) {
+				$('form#add-category').submit();
+			}
+			
+		});
+		
+		$('a.edit').click(function() {
+			$("#add-category-errors").children().remove();
+			$('div#add-category-form').show();
+			$('input#id').val($(this).attr('id'));
+			
+			var data = $(this).attr('rel').split(':');
+			
+			$('#category-type').val(data[0]);
+			$('#category-code').val(data[1]);
+			$('#category-code').attr('readonly', true);
+			
+			$('div#add-category').html('Save Type');
+			
+		});
+		
+		$('div#clear-category').click(function () {
+			$("#add-category-errors").children().remove();
+			$('input#id').val('');
+			$('#category-type').val('');
+			$('#category-code').attr('readonly', false);
+			$('#category-code').val('');
+			$('div#add-category').html('Add Type');
+			$('input').removeClass('errors');
+		});
+		
+		{% endif %}
+		{% if type == 'classification' %}
+		$('a#add-classification').click(function (){
+			$("#add-classification-errors").children().remove();
+			$("h2.action").hide();
+			$('div#add-classification-form').toggle();
+			$('div#add-classification-form').find('input[type="text"]').val("");
+		});
+		
+		$('div#add-classification').click(function (){
+			$("#add-classification-errors").children().remove();
+			
+			if($('input#classification-type').val().length > 0)
+			{	
+				if($('input#classification-type').val().length >= 255)
+				{
+					$('input#classification-type').addClass('errors');
+				}
+				else
+				{
+					$('form#add-classification').submit();
+				}
+				
+			}
+			else
+			{	
+				$("#add-classification-errors").append("<li>Classification type must contain characters.</li>");
+				$('input#classification-type').addClass('errors');
+			}
+		});
+		
+		$('a.edit').click(function() {
+			$("#add-classification-errors").children().remove();
+			$('div#add-classification-form').show();
+			$('input#id').val($(this).attr('id'));
+			
+			var data = $(this).attr('rel');
+			$('#classification-type').val(data);
+			
+			$('div#add-classification').html('Save Type');
+			
+		});
+		
+		$('div#clear-classification').click(function () {
+			$("#add-classification-errors").children().remove();
+			$('input#id').val('');
+			$('#classification-type').val('');
+			$('div#add-classification').html('Add Investment');
+			$('input').removeClass('errors');
+		});
+		
+		{% endif %}
+		
+		{% if type == 'investment' %}
+		$('a#add-investment').click(function (){
+			$("#add-investment-errors").children().remove();
+			$("h2.action").hide();
+			$('div#add-investment-form').toggle();
+			$('div#add-investment-form').find('input[type="text"]').val("");
+			$('div#add-investment-form').find('select').val("select");
+		});
+		
+		$('div#add-investment').click(function (){
+			$("#add-investment-errors").children().remove();
+			$('input').removeClass('errors');
+			$('select').removeClass('errors');
+			var errors = false;
+			
+			if($('input#investment-type').val().length <= 0) {
+				errors = true;
+				$("#add-investment-errors").append("<li>Investment type must contain characters.</li>");
+				$('input#investment-type').addClass('errors');
+			}
+			
+			if($("#fof_yes").is(':checked') == false && ($('#fof_no').is(':checked') == false)) {
+				errors = true;
+				$("#add-investment-errors").append("<li>You must choose a fund of fund option.</li>");
+			}
+
+			if($('#can-own').val() == 'select') {
+				errors = true;
+				$("#add-investment-errors").append("<li>You must select a value for can own.</li>");
+				$('#can-own').addClass('errors');
+			}
+
+			if($('#company').val() == 'select') {
+				errors = true;
+				$("#add-investment-errors").append("<li>You must select a value for group restriction.</li>");
+				$('#company').addClass('errors');
+			}
+
+			if(!errors){
+				$('form#add-investment').submit();
+			}
+			
+		});
+		
+		$('a.edit').click(function() {
+			$("#add-investment-errors").children().remove();
+			$('div#add-investment-form').show();
+			$('input#id').val($(this).attr('id'));
+			
+			var data = $(this).attr('rel').split(':');
+			
+			$('#investment-type').val(data[0]);
+			
+			var fof = (data[1] == 'True') ? true : false;
+			
+			if(fof)
+			{
+				$('input#fof_yes').attr('checked', true);
+				$('input#fof_no').attr('checked', false);
+			}
+			else
+			{
+				$('input#fof_no').attr('checked', true);
+				$('input#fof_yes').attr('checked', false);
+			}
+			
+			jQuery("select#can-own option[selected]").removeAttr("selected");
+			jQuery("select#can-own option[value='" + data[2] + "']").attr("selected", "selected");
+			jQuery("select#company option[value='" + data[3] + "']").attr("selected", "selected");
+			
+			$('div#add-investment').html('Save Type');
+			
+		});
+		
+		$('div#clear-investment').click(function () {
+			$("#add-investment-errors").children().remove();
+			$('input#id').val('');
+			$('#investment-type').val('');
+			$('div#add-investment').html('Add Investment');
+			$('input').removeClass('errors');
+			$('select').removeClass('errors');
+		});
+		
+		
+		{% endif %}
+		
+		{% if type == 'industry' %}
+		$('a#add-industry').click(function (){
+			$("#add-industry-errors").children().remove();
+			$("h2.action").hide();
+			$('div#add-industry-form').toggle();
+			$('div#add-industry-form').find('input[type="text"]').val("");
+		});
+		
+		$('div#add-industry').click(function (){
+			$("#add-industry-errors").children().remove();
+			$('input').removeClass('errors');
+			var errors = false;
+			
+			if($('input#industry-type').val().length <= 0){
+				errors = true;
+				$("#add-industry-errors").append("<li>Industry type must contain characters.</li>");
+				$('input#industry-type').addClass('errors');
+			}
+			
+			if($('input#industry-code').val().length > 2 || $('input#industry-code').val().length <= 0)
+			{
+				errors = true;
+				$("#add-industry-errors").append("<li>Industry code must be 1-2 characters long.</li>");
+				$('input#industry-code').addClass('errors');
+			}
+			
+			if(!errors) {
+				$('form#add-industry').submit();
+			}
+			
+		});
+		
+		$('a.edit').click(function() {
+			$("#add-industry-errors").children().remove();
+			$('div#add-industry-form').show();
+			$('input#id').val($(this).attr('id'));
+			
+			var data = $(this).attr('rel').split(':');
+			
+			$('#industry-type').val(data[0]);
+			$('#industry-code').val(data[1]);
+			$('#industry-code').attr('readonly', true);
+			
+			$('div#add-industry').html('Save Type');
+			
+		});
+		
+		$('div#clear-industry').click(function () {
+			$("#add-industry-errors").children().remove();
+			$('input#id').val('');
+			$('#industry-type').val('');
+			$('#industry-code').attr('readonly', false);
+			$('#industry-code').val('');
+			$('div#add-industry').html('Add Type');
+			$('input').removeClass('errors');
+		});
+		
+		{% endif %}
+	});
+	{% endif %}
+</script>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-utility">
+	<div id="dashboard-left">
+		{% if allowed %}
+		<ul>
+			<li><a href="/admin/lists/company">Company Types</a></li>
+			<li><a href="/admin/lists/fund">Fund Types</a></li>
+			<li><a href="/admin/lists/category">Fund Categories</a></li>
+			<li><a href="/admin/lists/classification">Fund Classifications</a></li>
+			<li><a href="/admin/lists/investment">Investment Types</a></li>
+			<li><a href="/admin/lists/industry">Industry Types</a></li>
+		</ul>
+	</div>
+	<div id="dashboard-additional">
+		<div>
+			{% if type == 'company' %}
+			{% if action %}
+				<h2 class="action">{{action}}</h2>
+			{% endif %}
+			{% if error %}
+				{{error}}
+			{% endif %}
+			<ul id="add-company-errors" class="errors">
+			</ul>
+			<h2><a href="#" id="add-company">Add Company Type</a></h2>
+			<div id="add-company-form">
+				<form id="add-company" method="POST" action="/admin/lists/company">
+					{% csrf_token %}
+					<div>
+						<input type="hidden" name="id" id="id" value="" />
+						<label>Company Type: </label><input type="text" id="company-type" name="company_type" value="" />
+					</div>
+					<div class="clear-float"></div>
+					<div class="form-button" id="add-company">Add Type</div>
+					<div class="form-button" id="clear-company">Clear</div>
+					<div class="clear-float"></div>
+				</form>
+			</div>
+			{% endif %}
+			{% if type == 'fund' %}
+			{% if action %}
+				<h2 class="action">{{action}}</h2>
+			{% endif %}
+			{% if error %}
+				{{error}}
+			{% endif %}
+			<ul id="add-fund-errors" class="errors">
+			</ul>
+			<h2><a href="#" id="add-fund">Add Fund Type</a></h2>
+			<div id="add-fund-form">
+				<form id="add-fund" method="POST" action="/admin/lists/fund">
+					{% csrf_token %}
+					<div>
+						<input type="hidden" name="id" id="id" value="" />
+						<label>Fund Type: </label><input type="text" id="fund-type" name="fund_type" value="" />
+					</div>
+					<div>
+						<label>Fund Code: </label><input maxlength="2" type="text" id="fund-code" name="fund_code" value="" />
+					</div>
+					<div class="clear-float"></div>
+					<div class="form-button" id="add-fund">Add Type</div>
+					<div class="form-button" id="clear-fund">Clear</div>
+				</form>
+			</div>
+			{% endif %}
+			{% if type == 'category' %}
+			{% if action %}
+				<h2 class="action">{{action}}</h2>
+			{% endif %}
+			{% if error %}
+				{{error}}
+			{% endif %}
+			<ul id="add-category-errors" class="errors">
+			</ul>
+			<h2><a href="#" id="add-category">Add Fund Category</a></h2>
+			<div id="add-category-form">
+				<form id="add-category" method="POST" action="/admin/lists/category">
+					{% csrf_token %}
+					<div>
+						<input type="hidden" name="id" id="id" value="" />
+						<label>Fund Category Type: </label><input type="text" id="category-type" name="category_type" value="" />
+					</div>
+					<div>
+						<label>Fund Category Code: </label><input maxlength="3" type="text" id="category-code" name="category_code" value="" />
+					</div>
+					<div class="clear-float"></div>
+					<div class="form-button" id="add-category">Add Type</div>
+					<div class="form-button" id="clear-category">Clear</div>
+				</form>
+			</div>
+			{% endif %}
+			{% if type == 'classification' %}
+			{% if action %}
+				<h2 class="action">{{action}}</h2>
+			{% endif %}
+			{% if error %}
+				{{error}}
+			{% endif %}
+			<ul id="add-classification-errors" class="errors">
+			</ul>
+			<h2><a href="#" id="add-classification">Add Fund classification</a></h2>
+			<div id="add-classification-form">
+				<form id="add-classification" method="POST" action="/admin/lists/classification">
+					{% csrf_token %}
+					<div>
+						<input type="hidden" name="id" id="id" value="" />
+						<label>Fund Classification Type: </label><input type="text" id="classification-type" name="classification_type" value="" />
+					</div>
+					<div class="clear-float"></div>
+					<div class="form-button" id="add-classification">Add Classification</div>
+					<div class="form-button" id="clear-classification">Clear</div>
+					<div class="clear-float"></div>
+				</form>
+			</div>
+			{% endif %}
+			{% if type == 'investment' %}
+			{% if action %}
+				<h2 class="action">{{action}}</h2>
+			{% endif %}
+			{% if error %}
+				{{error}}
+			{% endif %}
+			<ul id="add-investment-errors" class="errors">
+			</ul>
+			<h2><a href="#" id="add-investment">Add Investment Type</a></h2>
+			<div id="add-investment-form">
+				<form id="add-investment" method="POST" action="/admin/lists/investment">
+					{% csrf_token %}
+					<div>
+						<input type="hidden" name="id" id="id" value="" />
+						<label>Fund Investment Type: </label><input type="text" id="investment-type" name="investment_type" value="" />
+					</div>
+					<div>
+						<label>Fund of Fund</label>
+						<label class="autosize">Yes</label><input class="autosize" id="fof_yes" type="radio" name="fund_of_fund" value="1"/>
+						<label class="autosize">No</label><input class="autosize" id="fof_no" type="radio" name="fund_of_fund" value="0" />
+					</div>
+					<div>
+						<label>Can own</label>
+						<select id="can-own" name="can_own">
+								<option value="select">SELECT</option>
+								<option value="0">None</option>
+							{% for data in list_data %}
+								<option value="{{data.id}}">{{data.name}}</option>
+							{% endfor %} 
+						</select>
+					</div>
+					<div>
+						<label>Group Restriction</label>
+						<select id="company" name="company">
+								<option value="select">SELECT</option>
+							{% for company_selection in company_selections %}
+								<option value="{{company_selection.0}}">{{company_selection.1}}</option>
+							{% endfor %}
+						</select>
+					</div>
+					<div class="clear-float"></div>
+					<div class="form-button" id="add-investment">Add Investment</div>
+					<div class="form-button" id="clear-investment">Clear</div>
+				</form>
+			</div>
+			{% endif %}
+			
+			{% if type == 'industry' %}
+			{% if action %}
+				<h2 class="action">{{action}}</h2>
+			{% endif %}
+			{% if error %}
+				{{error}}
+			{% endif %}
+			<ul id="add-industry-errors" class="errors">
+			</ul>
+			<h2><a href="#" id="add-industry">Add Industry</a></h2>
+			<div id="add-industry-form">
+				<form id="add-industry" method="POST" action="/admin/lists/industry">
+					{% csrf_token %}
+					<input type="hidden" name="id" id="id" value="" />
+					<label>Industry Type: </label><input type="text" id="industry-type" name="industry_type" value="" />
+					<div class="clear-float"></div>
+					<label>Industry Code: </label><input maxlength="2" type="text" id="industry-code" name="industry_code" value="" />
+					<div class="clear-float"></div>
+					<div class="form-button" id="add-industry">Add Type</div>
+					<div class="form-button" id="clear-industry">Clear</div>
+				</form>
+			</div>
+			{% endif %}
+			
+			
+			</div>
+		</div>
+	<div class="clear-float"></div>
+	</div>
+	{% if type %}
+	<table class="data">
+		<tr>
+		{% if type == 'company' %}
+			<th id="company-type">Company Type</th>
+		{% endif %}
+		{% if type == 'fund' %}
+			<th id="fund-code">Fund Code</th>
+			<th id="fund-type">Fund Type</th>
+		{% endif %}
+		{% if type == 'category' %}
+			<th id="category-code">Category Code</th>
+			<th id="category-type">Category Type</th>
+		{% endif %}
+		{% if type == 'classification' %}
+			<th id="classification-type">Classification Type</th>
+		{% endif %}
+		{% if type == 'investment' %}
+			<th id="investment-type">Investment Type</th>
+			<th id="fund-of-fund">Fund of Fund</th>
+			<th id="can-own">Can own</th>
+			<th id="group-restriction">Group Restriction</th>
+		{% endif %}
+		{% if type == 'industry' %}
+			<th id="industry-code">Industry Code</th>
+			<th id="industry-type">Industry Type</th>
+		{% endif %}
+		</tr>
+		
+		{% for item in list_data %}
+			<tr class="{% cycle 'odd' 'even' %}">
+			{% if type == 'company' %}
+				<td><a href="#" id="{{item.id}}" class="edit" rel="{{item.name}}">{{item.name}}</a></td>
+			{% endif %}
+			{% if type == 'fund' %}
+				<td><a href="#" id="{{item.id}}" class="edit" rel="{{item.name}}:{{item.code}}">{{item.code}}</a></td>
+				<td><a href="#" id="{{item.id}}" class="edit" rel="{{item.name}}:{{item.code}}">{{item.name}}</a></td>
+			{% endif %}
+			{% if type == 'category' %}
+				<td><a href="#" id="{{item.id}}" class="edit" rel="{{item.name}}:{{item.code}}">{{item.code}}</a></td>
+				<td><a href="#" id="{{item.id}}" class="edit" rel="{{item.name}}:{{item.code}}">{{item.name}}</a></td>
+			{% endif %}
+			{% if type == 'classification' %}
+				<td><a href="#" id="{{item.id}}" class="edit" rel="{{item.name}}">{{item.name}}</a></td>
+			{% endif %}
+			{% if type == 'investment' %}
+				<td><a href="#" id="{{item.id}}" class="edit" rel="{{item.name}}:{{item.fund_of_fund}}:{{item.can_own.id}}:{{item.company}}">{{item.name}}</a></td>
+				<td><a href="#" id="{{item.id}}" class="edit" rel="{{item.name}}:{{item.fund_of_fund}}:{{item.can_own.id}}:{{item.company}}">{% if item.fund_of_fund %}Yes{% else %}No{% endif %}</a></td>
+				<td><a href="#" id="{{item.id}}" class="edit" rel="{{item.name}}:{{item.fund_of_fund}}:{{item.can_own.id}}:{{item.company}}">{% if item.can_own.name %}{{item.can_own.name}}{% else %}N/A{% endif %}</a></td>
+				<td>
+					<a href="#" id="{{item.id}}" class="edit" rel="{{item.name}}:{{item.fund_of_fund}}:{{item.can_own.id}}:{{item.company}}">
+					{% if item.company == 0 %}
+						Cannot own funds
+					{% endif %}
+					{% if item.company == 1 %}
+						Self Only
+					{% endif %}
+					{% if item.company == 2 %}
+						Other Ony
+					{% endif %}
+					{% if item.company == 3 %}
+						Self &amp; Other
+					{% endif %}
+					</a>
+				</td>
+			{% endif %}
+			{% if type == 'industry' %}
+				<td><a href="#" id="{{item.id}}" class="edit" rel="{{item.name}}:{{item.code}}">{{item.code}}</a></td>
+				<td><a href="#" id="{{item.id}}" class="edit" rel="{{item.name}}:{{item.code}}">{{item.name}}</a></td>
+			{% endif %}
+			</tr>
+		{% endfor %}
+		
+	</table>
+	{% endif %}
+</div>
+{% else %}
+	<h2>Invalid permissions</h2>
+{% endif %}
+{% endblock %}

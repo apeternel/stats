@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+
+{% block scripts %}
+<link rel="stylesheet" href="/files/css/jquery.autocomplete.css"></link>
+<script type="text/javascript" src="/files/js/jquery.bgiframe.min.js"></script>
+<script type="text/javascript" src="/files/js/jquery.autocomplete.js"></script>
+
+<script type="text/javascript">
+	$(document).ready(function () {
+	
+		var options = { };
+		
+		$('input#search').autocomplete('/admin/ajax/find/group', {
+		
+			parse: function(data) {
+                return $.map(data, function(row) {
+                    return { data:row, value:row[1], result:row[0] };
+                });
+            }
+		}).result(function(e, data, value){
+			$('input#contributer').val(data[1]);
+		});
+		
+		$('#search-contributer-button').click(function(){
+			if($('input#contributer').val() != '') 
+			{
+				$('#search-form').submit();
+			}
+		});
+		
+	});
+</script>
+	
+{% endblock %}
+
+{%block title %}Groups{% endblock %}
+
+{%block content %}
+	{% if allowed %}
+	{% if contributers %}	
+	<div class="dashboard-utility">
+		<div class="form-button"><a href="/admin/group/add">Add Group</a></div>
+		<div id="search-contributer">
+			<form id="search-form" method="POST" action="/admin/groups">
+			<input type="hidden" id="contributer" name="contributer" value=""/>
+			{% csrf_token %}
+			<input type="textbox" id="search" name="search" class="ui-autocomplete" value="{{search}}"/>
+			<div class="form-button" id="search-contributer-button">
+				Search
+			</div>
+			</form>
+		</div>
+	</div>
+	<section id="contributer-data">
+		<table class="data">
+			<tr>
+				<th id="group-name" class="table-left">Name</th>
+				<th id="code" class="center">Code</th>
+				<th id="industry">Industry</th>
+				<th id="status" class="center">Status</th>
+			</tr>
+			{% if contributers %}
+			{% for contributer in contributers %}
+			<tr class="{% cycle 'odd' 'even' %}">
+				<td class="table-left"><a href="/admin/group/edit/{{contributer.id}}">{{contributer.name}}  ({% if contributer.fund_count %}{{contributer.fund_count}}{% else %}0{% endif %})</a></td>
+				<td class="center"><a href="/admin/group/edit/{{contributer.id}}">{{contributer.code|upper}}</a></td>
+				<td><a href="/admin/group/edit/{{contributer.id}}">{{contributer.industry.name}}</a></td>
+				<td class="center"><a href="/admin/group/edit/{{contributer.id}}">{% if contributer.active %}active{% else %}disabled {% endif %}</a></td>
+			</tr>
+			{% endfor %}
+			{% else %}
+			<tr>
+				<td colspan="4" class="no-data">No Data Available</td>
+			</tr>
+			{% endif %}
+			
+		</table>
+	</section>
+	{% endif %}
+	</section>	
+	{% else %}
+	<div class="dashboard-utility">
+		<h2>Invalid permissions.</h2>
+	</div>
+	{% endif %}
+{% endblock %}
+

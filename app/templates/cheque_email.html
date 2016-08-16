@@ -1,0 +1,50 @@
+Thank you {{user.first_name}},
+
+{% if payment_type == 'Cheque' %}
+Your order has been received.
+{% else %}
+This is an official confirmation of your recent purchase of the IFIC Subscription described below.
+{% endif %}  
+
+{% if payment_type == 'Cheque' %}
+You will be sent an invoice for this transaction shortly
+{% else %}
+You have paid for this transaction using a Credit Card
+{% endif %}
+
+Purchase Details:
+{% for transaction in update_transactions %}
+    # {{transaction.id}} -     {{transaction.package.name}}
+    ${{transaction.package.price}} on {{transaction.date|date}}
+    Subscription Expiry: {{transaction.expires|date}}
+    
+{% endfor %}
+{% for transaction in new_transactions %}
+    # {{transaction.id}} - {{transaction.package.name}}
+    ${{transaction.package.price}} on {{transaction.date|date}}
+    Subscription Expiry: {{transaction.expires|date}}
+    
+{% endfor %}
+
+===
+
+Billing Information:
+
+{{user.first_name}} {{user.last_name}}
+{{profile.company}}
+{{address}}
+{{city}}, {{state}}, {{zip}}
+Ph: {{profile.phone}} {% if profile.extension %}{{profile.extension}}{% endif %}
+Email: {{user.email}}
+
+Username used for purchase {{user.username}} at {{timestamp}}
+
+{% if payment_type == 'Cheque' %}
+Please note access will be activated upon receipt and clearance of cheque.
+{% endif %}
+
+If you have any questions, or concerns please contact us at statistics@ific.ca o	r 416 309 2326
+
+Thank you,
+
+IFIC Statistics

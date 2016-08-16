@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+
+{% block title %}Statistics{% endblock %}
+
+{% block scripts %}
+<script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8/jquery-ui.min.js"></script>
+<link rel="stylesheet" href="/files/css/jquery.autocomplete.css"></link>
+<script type="text/javascript" src="/files/js/jquery.bgiframe.min.js"></script>
+<script type="text/javascript" src="/files/js/jquery.autocomplete.js"></script>
+<script type="text/javascript">
+$(document).ready(function(){
+	$("#datepicker").datepicker({dateFormat: 'yy-mm'});						
+    $("#datepicker").val("{{current_date}}");
+	
+	$('.purchase-link').click(function(){
+		var purchase_range = $('#datepicker').val()
+		
+		window.location = '/admin/purchase';
+	});
+	
+	$('#search-stats-button').click(function() {
+		var date_parts = $('#datepicker').val().split('-');
+		window.location = '/admin/statistics/' + date_parts[0] + '/' + date_parts[1];
+	});
+	
+	$('.download-link').click(function(){
+        if(!$(this).hasClass("not-uploaded"))
+        {
+    		var id = $(this).attr('id');
+    		var download_range = $('#datepicker').val();
+    		
+    		var date_parts = download_range.split('-');
+    		window.location = '/admin/download/' + id + '/' + date_parts[0] + '/' + date_parts[1];
+        }
+        else
+        {
+            return 1;
+        }
+	});
+	
+});
+</script>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-utility">
+    <div id="search-stats">
+    	<label>Date as of: </label><input type="text" id="datepicker" name="registration_date" value="{{current_date}}" />
+    	<div class="form-button" id="search-stats-button">Search</div>
+    </div>
+</div>
+<section id="stats-tables">
+	<table class="data" id="stats">
+		<tr>
+			<th id="filename">Report Name</th>
+			<th id="action">Action</th>
+		</tr>
+		{%for report in reports %}
+		{% if profile.user_type.type != 'admin' %}
+		{% if report in allowed_reports %}
+		<tr class="{% cycle 'odd' 'even' %}{% if report.quarterly %} quarterly{% endif %}">
+			<td><span>{{report.name}}</span>{% if report.id in warnings %} - <span class="subscription">(Subscription ending)</span>{% endif %}</td>
+			<td>
+				{% if profile.user_type.type == 'admin' or profile.user_type.type == 'contributer' %}
+					{% if report.uploaded %}
+					<div class="download-button"><img src="/files/images/download.png"/><span id="{{report.id}}" class="download-link">Download</span></div>
+					{% else %}
+					<div class="download-button not-uploaded"><span class="not-uploaded">Not Uploaded</span></div>
+					{% endif %}
+				{% else %}
+					{% if report.download %}
+						{% if report.uploaded %}
+							<div class="download-button"><img src="/files/images/download.png"/><span id="{{report.id}}" class="download-link" >Download</span></div>
+						{% else %}
+							<div class="download-button not-uploaded"><span class="not-uploaded">Not Uploaded</span></div>
+						{% endif %}
+					{% else %}
+						{% if report.uploaded %}
+						<div class="download-button"><img src="/files/images/buy.png"/><span class="purchase-link" href="#">Purchase</span></div>
+						{% else %}
+						<div class="download-button not-uploaded"><span class="not-uploaded">Not Uploaded</span></div>
+						{% endif %}
+					{% endif %}
+				{% endif %}
+			</td>
+		</tr>
+		{% endif %}
+		{% else %}
+		<tr class="{% cycle 'odd' 'even' %}{% if report.quarterly %} quarterly{% endif %}">
+			<td><span>{{report.name}}</span></td>
+			<td class="action">{% if profile.user_type.type == 'admin' %}{% if report.uploaded %}<div class="download-button"><img src="/files/images/download.png"/><span id="{{report.id}}" class="download-link">Download</span></div>{% else %}<div class="download-button not-uploaded"><span>Not Uploaded</span></div>{% endif %}{% endif %}</td>
+		</tr>
+		{% endif %}
+		{% endfor %}
+	</table>
+</section>
+{% endblock %}

@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}Validation{% endblock %}
+{% block scripts %}
+<script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8/jquery-ui.min.js"></script>
+{% endblock %}
+{% block content %}
+
+{% if allowed %}
+<div class="dashboard-utility">
+    <ul>
+        <li><a href="/admin/lists">Lists</a></li>
+        <li><a href="/admin/validation">Validation</a></li>
+        <li><a href="/admin/transactions">Transactions</a></li>
+        <li><a href="/admin/upload/settings">Upload Settings</a></li>
+        <li><a href="/admin/logs">Logs</a></li>
+    </ul>
+</div>
+{% else %}
+<div class="dashboard-utility">
+    <h2>Invalid permissions.</h2>
+</div>
+{% endif %}
+
+{% endblock %}

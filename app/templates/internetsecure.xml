@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?> 
+<TranxRequest>
+	<GatewayID>{{gateway}}</GatewayID> 
+    <Products>{{price}}::1::1::Monthly Listing::{TEST}</Products> 
+    <xxxName>{{first_name}} {{last_name}}</xxxName> 
+    <xxxAddress>{{address}}</xxxAddress> 
+    <xxxCity>{{city}}</xxxCity> 
+    <xxxState>{{state}}</xxxState> 
+    <xxxZipCode>{{zip}}</xxxZipCode> 
+    <xxxCountry>{{country}}</xxxCountry>
+    {% if phone %} 
+    <xxxPhone>{{phone}}</xxxPhone>
+    {% endif %} 
+    <xxxEmail>{{user.email}}</xxxEmail>
+    <xxxCard_Number>{{credit}}</xxxCard_Number> 
+    <xxxCCMonth>{{month}}</xxxCCMonth> 
+    <xxxCCYear>{{year}}</xxxCCYear> 
+    <CVV2>{{cvv}}</CVV2> 
+    <CVV2Indicator>1</CVV2Indicator> 
+    <xxxTransType>00</xxxTransType> 
+</TranxRequest> 

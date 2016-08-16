@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+
+{%block title %}More Info{% endblock %}
+
+{%block scripts %}
+{% endblock %}
+{% block content %}
+<div class="home-info">
+	<h3 id="framework">NEW FRAMEWORK FOR IFIC STATISTICS</h3>
+	<p>In an effort to preserve the value of the comprehensive data offered 
+	by IFIC Statistics, a new balance has been struck that provides greater 
+	differentiation between the data available to Contributors and Subscribers 
+	and that which can be freely accessed. Please note that fund managers will 
+	maintain their access via a new Data Contributor Agreement (as detailed in previous communications), 
+	as will Subscribers (non-contributors of data) through a Data Subscriber Agreement. Fund Managers 
+	are prohibited from being Subscribers.
+	<br/>
+	On August 15, 2011, changes were made to IFIC Statistics. 
+	Industry figures now include supplementary data provided by Investor Economics, 
+	resulting in data that better reflects the current size and activity of the Canadian 
+	retail mutual fund industry.  
+	</p>
+	<h3 id="access">HOW TO ACCESS IFIC STATISTICS</h3>
+	<p>
+	This new website has been built to provide Contributors and Subscribers 
+	with the ability to access the level of detail that they are seeking. 
+	Under this new Framework, each firm must designate an individual as a Person 
+	Ultimately Responsible for Statistics Entitlements who will undertake to fulfill 
+	the duties outlined in the Data Subscriber Agreement. User information reported 
+	under the Data Subscriber Agreement will be uploaded and gain access via user logins 
+	to the password protected site.
+	</p>   
+	<p>
+	To continue access the reports mentioned above or other non-public IFIC Statistics' 
+	reports, a duly completed Data Subscriber Agreement must be received and accepted by IFIC. 
+	The necessary documents are available via the hyperlinks below.
+	</p>
+	
+	<ul>
+		<li><a href="/download/datasubscriberagreement.pdf">Data Subscriber Agreement</a></li>
+		<li><a href="/download/requestforma.pdf">Request Form A: DATABASE ACCESS GROUP FOR STATISTICS</a></li>
+		<li><a href="/download/subscriptionsfeespackages.pdf">Subscriptions Fees & Packages</a></li>
+		<li><a href="/download/externalreportingguidelines.pdf">External Reporting Guidelines</a></li>
+		<li><a href="/download/sampleificreports.zip">Sample IFIC Reports</a></li>
+	</ul>
+	
+	<p>Please contact IFIC's Statistics group via email at
+	<a href="mailto:statistics@ific.ca">statistics@ific.ca</a> for more details, or if you have any questions.</p>
+</div>
+<table class="home-info">
+	<tr>
+		<th>External Reporting Guidelines</th>
+		<th>Quarterly Subscriber File</th>
+		<th>(Monthly) CIFSC File or IFIC Asset</th>
+		<th>Proprietary Fund Co. Data</th>
+	</tr>
+	<tr class="header-row">
+		<td class="heading">AUM and associated derivations</td>
+		<td></td>
+		<td></td>
+		<td></td>
+	</tr>
+	<tr>
+		<td class="heading">Market Share</td>
+		<td><img src="/files/images/check.png"/></td>
+		<td><img src="/files/images/check.png"/></td>
+		<td><img src="/files/images/check.png"/></td>
+	</tr>
+	<tr>
+		<td class="heading">Ranking: Firms</td>
+		<td><img src="/files/images/check.png"/></td>
+		<td><img src="/files/images/x.png"/></td>
+		<td><img src="/files/images/x.png"/></td>
+	</tr>
+	<tr>
+		<td class="heading">Ranking: Funds - same firm</td>
+		<td><img src="/files/images/check.png"/></td>
+		<td><img src="/files/images/x.png"/></td>
+		<td><img src="/files/images/x.png"/></td>
+	</tr>
+	<tr>
+		<td class="heading">Ranking: Funds - across firms</td>
+		<td><img src="/files/images/x.png"/></td>
+		<td><img src="/files/images/x.png"/></td>
+		<td><img src="/files/images/x.png"/></td>
+	</tr>
+	<tr class="header-row">
+		<td class="heading">Non-AUM & associated derivations</td>
+		<td></td>
+		<td></td>
+		<td></td>
+	</tr>
+	<tr>
+		<td class="heading">Market Share</td>
+		<td><img src="/files/images/check.png"/></td>
+		<td><img src="/files/images/check.png"/></td>
+		<td><img src="/files/images/check.png"/></td>
+	</tr>
+	<tr>
+		<td class="heading">Ranking: Firms</td>
+		<td><img src="/files/images/check.png"/></td>
+		<td><img src="/files/images/x.png"/></td>
+		<td><img src="/files/images/x.png"/></td>
+	</tr>
+	<tr>
+		<td class="heading">Ranking: Funds - same firm</td>
+		<td><img src="/files/images/x.png"/></td>
+		<td><img src="/files/images/x.png"/></td>
+		<td><img src="/files/images/x.png"/></td>
+	</tr>
+	<tr>
+		<td class="heading">Ranking: Funds - across firms</td>
+		<td><img src="/files/images/x.png"/></td>
+		<td><img src="/files/images/x.png"/></td>
+		<td><img src="/files/images/x.png"/></td>
+	</tr>
+</table>
+<div class="home-info">
+	<h4>Market Share:</h4>
+	<p>Market Share uses the firm's proprietary data compared to some industry aggregate*, e.g. CIFSC.	This calculation / comparison can be performed using data released both monthly and quarterly. No knowledge of competitors' data is required.</p>
+	<p>* <em>IFIC recommends that for external communications, participants use the Investor Economics aggregates for the computation of fund company market share statistics.</em></p>
+	<h4>Rankings:</h4>
+	<p>Any ranking requires knowledge of own firm's position relative to competition's position. Since this knowledge can only exist using Detailed Data, rankings are possible only using released Quarterly Subscriber Data.</p>
+</div>
+{% endblock %}

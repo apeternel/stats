@@ -1,0 +1,355 @@
+{% extends "base.html" %}
+
+{% block title %}Upload Templates{% endblock %}
+
+{% block scripts %}
+<link rel="stylesheet" href="/files/css/jquery.autocomplete.css"></link>
+<link rel="stylesheet" href="/files/css/fileuploader.css"></link>
+
+<script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8/jquery-ui.min.js"></script>
+<script type="text/javascript" src="/files/js/jquery.bgiframe.min.js"></script>
+<script type="text/javascript" src="/files/js/jquery.autocomplete.js"></script>
+<script type="text/javascript" src="/files/js/fileuploader.js"></script>
+
+<script type="text/javascript">
+	
+		$(document).ready(function (){
+		
+			$.ajaxSetup({
+			    cache: false
+			});
+			
+			$('#done').click(function() {
+				$.get('/admin/ajax/complete', function(response) {
+					window.location =  '/admin/upload';
+					});
+			});
+			
+			$('#cancel').click(function() {
+				$.get('/admin/ajax/complete', function(response) {
+					window.location =  '/admin/upload';
+					});
+			});
+			
+			$('input#search').autocomplete('/admin/ajax/find/group', {
+			dataType: 'json',
+			parse: function(data) {
+                return $.map(data, function(row) {
+                    return { data:row, value:row[1], result:row[0] };
+                });
+            },
+            extraParams : { restrict: true 
+            
+            }
+			}).result(function(e, data, value){ 
+				$('#contributer').val(data[1]);
+			});
+			
+			$('a#next').click(function() {
+			
+				$("ul.errors").children().remove();
+				$(".errors").hide();
+			
+				var get = { };
+				
+				if($('#contributer').val())
+				{
+
+					get.contributer = $('#contributer').val();
+					$.get('/admin/ajax/upload/step', get, function(response) {
+						window.location = '/admin/upload';
+					});
+				}
+				else
+				{
+					$("ul.errors").append("<li>No contibuter selected.</li>")
+					$(".errors").show();
+				}
+			});
+			
+			{% if step == 1 %}
+			
+			
+			var uploader = new qq.FileUploader({
+    			element: document.getElementById('file-uploader'),
+    			
+    			// path to server-side upload script
+    			action: '/admin/upload/file',
+    			params: {
+    				csrfmiddlewaretoken: $('input[name=csrfmiddlewaretoken]').val(),
+    				contributer: $('#contributer').val(),
+    				template:  function() { return $('#template_type').val(); },
+    			},
+    			allowedExtensions: ['csv', 'txt'],
+    			onComplete: function(id, file_name, jsonResponse)
+    			{
+    				var get = { };
+					get.template = function() { return $('#template_type').val(); };
+					$(window).trigger('resize');
+				
+				$.get('/admin/ajax/validate', get, function(response)
+				{	
+					var tempNum = $("#template_type").val();
+					$('ul.warnings.'+tempNum).children().remove();
+					$('ul.errors.'+tempNum).children().remove();
+				
+					if(response.summary)
+					{
+                        var listElements = [];
+                        if ($('#template_type').val() == 1) { 
+                            listElements = ['net_total_assets','cash_short_term','gross_sales','reinvested','redemptions','transfers_in','transfers_out','unit_holders','capital_gains','net_sales','income_actual'];
+                        }
+                        else if($('#template_type').val() == 2 || $('#template_type').val() == 3) {
+                            listElements = ['asset_total','purchase_total','redemption_total','transfers_in_total','transfers_out_total'];
+                        }
+						$(".table."+tempNum+" table").children().remove();
+                      	
+						$.each(listElements, function(i, val) {
+							var html = '<tr>';
+							var split = val.split('_');
+							var iNice = '';
+							$.each(split, function(e, str) {
+								firstLetter = str.substr(0, 1);
+								iNice = iNice + firstLetter.toUpperCase() + str.substr(1) + ' ';
+							});
+							
+							html = html + '<td>'+iNice+'</td>';
+							html = html + '<td>$' + response.summary[val].toFixed(2) +'</td>';
+							html = html + '</tr>';
+							$(".table."+tempNum+" table").append(html);
+						});
+						$(".table."+tempNum).show();
+						
+						$(window).trigger('resize');
+					}
+				
+					if(response.warnings)
+					{
+						if(response.warnings.length > 0)
+						{
+							$('div.warnings.'+tempNum).show();
+							for(var x = 0; x < response.warnings.length; x++)
+							{
+								
+								$('ul.warnings.'+tempNum).append('<li>' + response.warnings[x].message + '</li>');
+						
+							}
+				
+							$(window).trigger('resize');
+							
+						}
+					}
+					
+					if(response.status == 'ok')
+					{
+					}
+					else
+					{	
+						$('div.errors.'+tempNum).show();
+						for(var x = 0; x < response.errors.length; x++)
+						{
+							$('ul.errors.'+tempNum).append('<li>' + response.errors[x].message + '</li>');
+					
+						}
+				
+						$(window).trigger('resize');
+						
+					}
+				
+				});
+    			}
+    			
+			});
+			
+			$('.validate-button').live('click', function(){
+				var get = { };
+				get.template = $(this).attr('rel');
+				var rel = $(this).attr('rel');
+                var errors = false;
+				
+				$.get('/admin/ajax/validate', get, function(response)
+				{	
+					$('div.warnings.'+rel).hide();
+					$('ul.warnings.'+rel).children().remove();
+					$('div.errors.'+rel).hide();
+					$('ul.errors.'+rel).children().remove();
+				
+					if(response.warnings)
+					{  
+                        errors = true;
+						if(response.warnings.length > 0)
+						{
+							$('div.warnings.'+rel).show();
+							for(var x = 0; x < response.warnings.length; x++)
+							{
+								$('ul.warnings.'+rel).append('<li>' + response.warnings[x].message + '</li>');
+							}
+						}
+					}
+					
+					if(response.status == 'ok')
+					{
+					}
+					else
+					{
+                        errors = true;
+						$('div.errors.'+rel).show();
+						for(var x = 0; x < response.errors.length; x++)
+						{
+							$('ul.errors.'+rel).append('<li>' + response.errors[x].message + '</li>');
+						}
+				
+						$(window).trigger('resize');
+					}
+                 
+                    if(!errors)
+                    {   
+                        $('div.clear.'+rel).show();
+                    }
+                 
+                    $(this).hide();    
+				});
+                                      
+			});
+			{% endif %}
+		}); 
+		
+
+</script>
+{% endblock %}
+
+{% block content %}
+
+
+{% if can_upload %}
+<div class="dashboard-utility">
+	{% if contributer %}
+	<div>
+	<h2>({{contributer.code|upper}}) {{contributer.name}}</h2>
+	</div>
+	{% endif %}
+	<input type="hidden" name="contributer" id="contributer" value="{% if contributer %}{{contributer.id}}{% endif %}" />
+
+	{% csrf_token %}
+	{% if step == 0 %}
+	<section id="upload-step-0">
+		<input type="textbox" id="search" name="search" class="ui-autocomplete" value="{{search}}"/> 
+		<div class="form-button"><a id="next" href="#">Upload for Group</a></div>
+	</section>
+	{% endif %}
+	{% if step == 1 %}
+	<section id="upload-step-1">
+		<div>
+		Uploading for the month of: {{upload_month}}
+		</div>
+		<select id="template_type" name="template_type">
+            {% for template in templates_have %}
+                {% if profile.user_type.type == 'admin' and template in templates_uploaded %}
+                    <option value="{{template.0}}">{{template.1}} {% if template in templates_uploaded %}*Overwrite{% endif %}</option>
+                {% else %}
+                    <option value="{{template.0}}">{{template.1}}</option>    
+                {% endif %}
+            {% endfor %}
+				
+		</select>
+		<div id="file-uploader"></div>
+	</section>
+	<section id="upload-step-2">
+		<div>
+			{% if templates_have %}
+			Templates Uploaded for this month		
+			<ul id="templates_have">
+				{% for template in templates_uploaded %}
+				<li id="li-template{{forloop.counter}}"> 
+					<div class="form-button validate-button" id="template{{template.0}}" rel="{{template.0}}">
+						{{template.1}} Errors
+					</div>
+				</li>
+				{% endfor %}
+			</ul>
+			{% endif %}
+			{% if templates_false %}
+			Templates Not Uploaded for this month		
+			<ul id="templates_false">
+				{% for template in templates_have %}
+					{% if template not in templates_uploaded %}
+					<li id="li-template{{template.0}}">
+						<span class="template-name">{{template.1}}</span> 
+					</li>
+					{% endif %}
+				{% endfor %}
+			</ul>
+			{% endif %}
+	        <div class="clear 1">
+	            Template 1 - No Errors
+	        </div>
+			<div class="errors 1">
+				Template 1 - Error(s)
+				<ul class="errors 1">
+				</ul>
+			</div>
+			<div class="warnings 1">
+				Template 1 - Warning(s):
+				<ul class="warnings 1">
+				</ul>
+			</div>
+			<div class="table 1">
+				Template 1 - Summary
+				<table class="summary">
+				</table>
+			</div>
+			
+	        <div class="clear 2">
+	            Template 2 - No Errors
+	        </div>
+			<div class="errors 2">
+				Template 2 - Error(s)
+				<ul class="errors 2">
+				</ul>
+			</div>
+			<div class="warnings 2">
+				Template 2 - Warning(s):
+				<ul class="warnings 2">
+				</ul>
+			</div>
+			<div class="table 2">
+				Template 2 - Summary
+				<table class="summary">
+				</table>
+			</div>
+			
+	        <div class="clear 3">
+	            Template 3 - No Errors
+	        </div>
+			<div class="errors 3">
+				Template 3 - Error(s)
+				<ul class="errors 3">
+				</ul>
+			</div>
+			<div class="warnings 3">
+				Template 3 - Warning(s):
+				<ul class="warnings 3">
+				</ul>
+			</div>
+			<div class="table 3">
+				Template 3 - Summary
+				<table class="summary">
+				</table>
+			</div>
+			
+            <div class="form-button" id="cancel">Cancel</div>
+			<div class="form-button" id="done">Complete</div>
+		</div>
+	{% endif %}
+	</section>
+{% else %}
+<div class="dashboard-utility">
+	<h2>Upload Error</h2>
+	<ul>
+		<li>Upload Period Over</li>
+	</ul>
+</div>
+
+{% endif %}
+
+{% endblock %}
