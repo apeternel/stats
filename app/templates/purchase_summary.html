@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{%block title %}Purchase Summary{% endblock %}
+
+{%block scripts %}
+{% endblock %}
+{% block content %}
+<div class="dashboard-utility">
+    <h2>Purchase Summary</h2>
+    <ul>
+        <li>Name: {{name}}</li>
+        {% if profile.company %}<li>Company: {{profile.company}}</li>{% endif %}
+        {% if profile.department %}<li>Department: {{profile.department}}</li>{% endif %}
+        {% if profile.position %}<li>Position: {{profile.position}}</li>{% endif %}
+        {% if profile.phone %}<li>Phone: {{profile.phone}}</li>{% endif %}
+        {% if profile.extension %}<li>Ext: {{profile.extension}}</li>{% endif %}
+    </ul>
+    <h2>Package(s)</h2>
+    <ul>
+    {% for transaction in update_transactions %}
+        <li class='package-header'>{{transaction.package.name}} - {{transaction.package.id}}</li>
+        {% if transaction.package.description %}
+            <li>{{transaction.package.description}}</li>
+        {% endif %}
+        <li>Price: $ {{transaction.package.price}}</li>
+        <li>Expiration Date: {{transaction.expires|date}}</li>
+    {% endfor %}
+    {% for transaction in new_transactions %}
+        <li class='package-header'>{{transaction.package.name}} - {{transaction.package.id}}</li>
+        {% if transaction.package.description %}
+            <li>{{transaction.package.description}}</li>
+        {% endif %}
+        <li>Price: $ {{transaction.package.price}}</li>
+        <li>Expiration Date: {{transaction.expires|date}}</li>
+    {% endfor %}
+    </ul>
+</div>
+{% endblock %}

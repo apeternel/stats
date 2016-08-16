@@ -1,0 +1,224 @@
+{% extends "base.html" %}
+
+{%block title %}Homepage{% endblock %}
+
+{%block scripts %}
+<script type="text/javascript" src="/files/js/encoder.js"></script>
+<script type="text/javascript">
+    
+    function exportData()
+    {
+     
+        var array = new Array();
+        var id;
+        var template;
+     
+        $("table tr").each( function() {
+            var rowArray = new Array();
+            $(this).find("td input").each( function() {
+            	if($(this).val() != '')
+            	{
+            	    rowArray.push($(this).val());
+            	}
+            	else
+            	{
+            	    rowArray.push('/t');
+            	}
+
+            })
+            array.push(rowArray);
+        });
+  
+        id = $("#save").attr("rel").split('-')[1];
+        template = $("#save").attr("rel").split('-')[3];
+   		
+        
+        $.ajax('/admin/ajax/save/report/'+id+'/'+template, {type: 'POST', data: JSON.stringify(array), processData:false});
+        return false;
+    }
+    
+    $(document).ready(function() {
+                                  
+        $("#save").click(function () {
+            exportData();
+        });
+                    
+        data = '{{data}}';
+        data = Encoder.htmlDecode(data);
+
+        data = JSON.parse(data); 
+        var string = '';
+        var cols = 0;
+        var rows = 0;
+
+        var errors = new Array()
+        {% if template_errors|length > 0 %}
+        {% for error in template_errors %}
+            var error = { };
+            error.col = {{error.column}};
+            error.row = {{error.row}};
+            error.error = '{{error.error}}';
+            error.error_type = {{error.error_type}}
+            errors.push(error);
+        {% endfor %}
+        {% endif %}
+        
+
+        //Processing  
+        rows = data.length;        
+        for(var i = 0; i < data.length; i++)
+        {
+            if(data[i].length > cols)
+            {
+                cols = data[i].length;
+            }
+        }
+        
+        for(var i = 0; i < data.length; i++)
+        {
+            string = string+'<tr>';
+            for(var j = 0; j < cols; j++)
+            {   
+                if(data[i][j])
+                {
+                    string = string+'<td><input class="row-'+i+'-col-'+j+'" type="textbox" value="'+data[i][j]+'"></input></td>';
+                }
+                else
+                {
+                    string = string+'<td><input class="row-'+i+'-col-'+j+'" type="textbox" value=""></input></td>';
+                }
+            }
+            string = string+'</tr>';
+        }
+        
+        //Output
+        $('table').append(string);
+        
+        //Errors
+        for(var i = 0; i < errors.length; i++)
+        {
+            var name = "input.row-"+errors[i].row+"-col-"+errors[i].col;
+            if(errors[i].error_type == 1)
+            {
+                $(name).addClass("error");
+                $(name).attr('rel', 'error');
+            }
+            else
+            {
+                $(name).addClass("warning");
+                $(name).attr('rel', 'warning');
+            }
+            $(name).attr("title", errors[i].error);
+        }
+                                  
+        $("table").css('width', (cols * 200));
+                                  
+        $('#add-row').click( function() {
+            var string = '';
+            rows++;
+            string = string + '<tr>';
+            for(var i = 0; i < cols ; i++)
+            {
+                string = string + '<td><input class="row-'+rows+'-col-'+i+'" type="textbox" value=""></input></td>';
+            }
+            string = string + '</tr>';
+            
+            $('table').append(string);
+        });
+        
+        $('#add-col').click( function() {
+            cols++;
+            $('table tr').each( function() {
+                var string = '';
+                string = string + '<td><input class="row-'+rows+'-col-'+i+'" type="textbox" value=""></input></td>';
+                $(this).append(string);
+            });
+            var tdWidth = 100;
+            var tableWidth = $('table#spreadsheet').width();
+            var total = tdWidth + tableWidth;
+            $('table#spreadsheet').css('width', total);
+            
+        });
+        
+        $('#download-template').click(function(){
+			
+        	window.open('/admin/download/template/{{id}}/{{template}}/{{month}}/{{year}}', 'Download');
+        	
+        	
+        });
+        
+        $('ul#grid-list li input').click( function() {
+             if($(this).is(':checked'))
+             {
+                rel = $(this).attr('rel');
+                if($('table td input.'+rel).attr('rel') == 'warning')
+                {
+                    $('table td input.'+rel).removeClass('warning');
+                }
+                else if($('table td input.'+rel).attr('rel') == 'error')
+                {
+                    $('table td input.'+rel).removeClass('error');
+                }
+             }
+             else
+             {
+                rel = $(this).attr('rel');
+                if($('table td input.'+rel).attr('rel') == 'warning')
+                {
+                    $('table td input.'+rel).addClass('warning');
+                }
+                else if($('table td input.'+rel).attr('rel') == 'error')
+                {
+                    $('table td input.'+rel).addClass('error');
+                }
+             }
+        });
+             
+        $('ul#grid-list li').mouseenter( function() {
+             rel = $(this).find('input').attr('rel');
+             $('table td input.'+rel).addClass('highlight');
+        }).mouseleave(function () {
+             rel = $(this).find('input').attr('rel');
+             $('table td input.'+rel).removeClass('highlight');                        
+        });
+    
+        $('ul#grid-list li a').click( function() {
+             $(this).parent().remove();
+             rel = $(this).parent().find('input').attr('rel');
+             $('table td input.'+rel).removeClass('highlight');
+             $('table td input.'+rel).removeClass('error');
+             $('table td input.'+rel).removeClass('warning');
+             return false;
+        })
+    
+    });
+    
+</script>
+{% endblock %}
+
+{% block content %}
+
+<div class="dashboard-utility">
+    <div class="spreadsheet-container">
+    <table id="spreadsheet">
+    </table>
+    </div>
+    <div id="button-container">
+        <div class="spreadsheet-button" id="save" rel="id-{{id}}-template-{{template}}">Save</div>
+        <div class="spreadsheet-button" id="add-row">Add Row</div>
+        <div class="spreadsheet-button" id="add-col">Add Column</div>
+        <div class="spreadsheet-button" id="download-template">Download Template</div>
+    </div>
+    <div id="grid-list-container">
+        <h2>Errors / Warnings</h2>
+        <ul id="grid-list">
+        {% if template_errors|length > 0 %}
+        {% for error in template_errors %}
+            <li {% if error.error_type == 1 %}class="error"{% else %}class="warning"{% endif %}><input class="{{error.id}}" rel="row-{{error.row}}-col-{{error.column}}" type="checkbox"/> | <a href="#">Remove</a> | {{error.error}}</li>
+        {% endfor %}
+        {% endif %}
+        </ul>
+    </div>
+</div>
+
+{% endblock %}

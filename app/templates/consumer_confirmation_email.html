@@ -1,0 +1,26 @@
+Thank you {{user.first_name}} {{user.last_name}}
+
+Your user ID has been created and is being reviewed by our department.
+
+You will be contacted at the information provided below shortly.
+
+User Information:
+
+{{user.first_name}} {{user.last_name}}
+{{user_profile.position}}
+{{user_profile.company}}
+{{user_profile.department}}
+Ph: {{user_profile.phone}} {% if user_profile.extension %}{{user_profile.extension}}{% endif %}
+Email: {{user.email}}
+
+Username: {{user.username}}
+
+Password: {{password}}
+
+If you have any questions, or concerns, or if the above information is incorrect please contact us at 
+statistics@ific.ca or 416-309-2326 
+
+
+Thank you,
+
+IFIC Statistics

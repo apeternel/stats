@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+
+{%block title %}Add Transaction{% endblock %}
+
+{% block scripts %}
+<script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8/jquery-ui.min.js"></script>
+<link rel="stylesheet" href="/files/css/jquery.autocomplete.css"></link>
+<script type="text/javascript" src="/files/js/jquery.bgiframe.min.js"></script>
+<script type="text/javascript" src="/files/js/jquery.autocomplete.js"></script>
+<script type="text/javascript" src="/files/js/validation.js"></script>
+<script type="text/javascript">
+	$(document).ready(function () {
+	
+		var options = { };
+		
+		$('input#search_user').autocomplete('/admin/ajax/find/user', {
+		
+			parse: function(data) {
+                return $.map(data, function(row) {
+                    return { data:row, value:row[1], result:row[0] };
+                });
+            }
+		}).result(function(e, data, value){
+			$('input#user').val(data[1]);
+		});
+		
+		$('#search-user-button').click(function(){
+			if($('input#user').val() != '') 
+			{
+				$('form#search-user').submit();
+			}
+		});
+		
+		$('input[type=checkbox]').click( function() {
+			if($(this).attr('name').split('-')[0] == 'parent')
+			{
+				var id = $(this).attr('name').split('-')[1];
+				if($(this).is(':checked'))
+				{
+					$('input.child-'+id).attr('checked', true);
+				}
+				else
+				{
+					$('input.child-'+id).removeAttr('checked');
+				}
+			}
+			else if($(this).attr('name').split('-')[0] == 'child')
+			{
+				var id = $(this).attr('name').split('-')[1];
+				if($(this).is(':checked'))
+				{
+					var count = 0;
+					$('input.child-'+id).each( function() {
+						if(!$(this).is(':checked'))
+						{
+							count++;
+						}
+					});
+
+					if(count == 0)
+					{
+						$('input[name=parent-'+id+']').attr('checked', true);
+					}
+				}
+				else
+				{
+					$('input[name=parent-'+id+']').removeAttr('checked');
+				}
+			}
+		})
+		
+	});
+
+</script>
+{% endblock %}
+{% block content %}
+{% if allowed %}
+<div class="dashboard-utility">
+	<form method="POST" action="/admin/transaction/add">
+		<div class="input left">
+			<label>Transaction Type:</label>
+			<select id="transaction-type" name="transaction">
+			{% for type in transaction_types %}
+			<option value="{{type.0}}">{{type.1}}</option>
+			{% endfor %}
+			</select>
+		</div>
+		<div class="input">
+			<label id="search_user">User: </label><input type="textbox" id="search_user" name="search_user" class="ui-autocomplete" value=""/>
+		</div>	
+		<table id="transaction table">
+			<tr>
+				<th>Package Name</th>
+				<th>Package Price</th>
+			</th>
+			{% for package in packages %}
+			<tr>
+				<td><span>{{package.name}}<input class="checkbox" type="checkbox" id="package-{{package.id}}" name="parent-{{package.id}}" value="" /></span></td>
+				<td><span>${{package.price}}</span></td>
+			</tr>
+			<tr>
+				<td colspan="2">
+				<span>Reports</span>
+				<ul>
+					{% for report in package.reports.all %}
+					<li><input class="checkbox child-{{package.id}}" type="checkbox" name="child-{{package.id}}-report-{{report.id}}" id="report-{{report.id}}" value="" rel="{{package.per_file_price}}" />{{report.name}} (${{package.per_file_price}})</li>
+					{% endfor %}
+				</ul>
+				</td>
+			</tr>
+			{% endfor %}
+		</table>
+		<div>
+			<label>Price: </label><input type="textbox" name="price" id="price" value="" />
+		</div>
+	</form>
+</div>
+
+
+{% endif %}
+{% endblock %}

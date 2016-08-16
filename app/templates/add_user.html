@@ -1,0 +1,231 @@
+{% extends "base.html" %}
+
+{%block title %}Add User{% endblock %}
+
+{% block scripts %}
+<script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8/jquery-ui.min.js"></script>
+<link rel="stylesheet" href="/files/css/jquery.autocomplete.css"></link>
+<script type="text/javascript" src="/files/js/jquery.bgiframe.min.js"></script>
+<script type="text/javascript" src="/files/js/jquery.autocomplete.js"></script>
+<script type="text/javascript" src="/files/js/validation.js"></script>
+<script type="text/javascript">
+
+$(document).ready(function() {
+
+	$("#checkall").click( function() {
+		var checked = true;
+		$('table input[type=checkbox]').each( function() {
+			if(!$(this).is(':checked'))
+			{	
+				checked = false;
+			}
+		})
+								
+		if(!checked)
+			$('table input[type=checkbox]').attr('checked', 'true');
+		else
+			$('table input[type=checkbox]').removeAttr('checked', 'false');
+		
+		return false;
+		
+	});
+
+	$('#save-user').click(function() {
+	
+		var edit = false;
+	
+		{% if edit %}
+		edit = true;
+		{% endif %}
+	
+		var get = { };
+		var errors = false;
+		
+		get.user = $.trim($("#username").val());
+		get.email = $.trim($("#email").val());
+		get.user_type = $("#user-type").val();
+		get.password = $("input#password").val();
+		get.password_confirm = $("input#password-confirm").val();
+		get.member = $("#member").val();
+		if($("input[name=active]").is(':checked') == true)
+		{
+			get.active = 1;
+		}
+		
+		$("ul.errors").children().remove();
+		$('select').removeClass('errors');
+		$('input').removeClass('errors');
+		$("h2.action").hide();
+		
+		if(get.user.length == 0) {
+			errors = true;
+			$("ul.errors").append("<li>You must enter a username.</li>");
+			$("#username").addClass('errors');
+		} else {
+			if(!validate_user(get.user)) {
+				errors = true;
+				$("ul.errors").append("<li>A user must be atleast 6 characters and contain letters and numbers.</li>");
+				$('username').addClass('errors');
+			}		
+		}
+		
+		if(get.email.length == 0) {
+			errors = true;
+			$("ul.errors").append("<li>You must enter an email address.</li>");
+			$('#email').addClass('errors');
+		} else {
+			if(!validate_email(get.email)) {
+				errors = true;
+				$("ul.errors").append("<li>Email address is not valid.</li>");
+				$('#email').addClass('errors');
+			}
+			
+		}
+		
+		if(get.user_type == "select") {
+			errors = true;
+			$("ul.errors").append("<li>You must select a permission level for the user.</li>");
+			$('#user-type').addClass('errors');
+		}
+		
+		if(!edit) {
+			if(get.password.length == 0) {
+				errors = true;
+				$("ul.errors").append("<li>You need to enter a password for the user.</li>");
+				$('input#password').val('');
+				$('input#password-confirm').val('');
+			} else {
+				if(!validate_pwd(get.password)) {
+					errors = true;
+					$("ul.errors").append("<li>Password must be atleast 6 characters and contain only letters and numbers.</li>");
+					$('input#password').val('');
+					$('input#password-confirm').val('');
+				}
+			}
+			
+			if(get.password_confirm.length == 0) {
+				errors = true;
+				$("ul.errors").append("<li>You must confirm the user password.</li>");
+				$('input#password').val('');
+				$('input#password-confirm').val('');
+			}
+			
+			if(get.password.length != 0 && get.password != get.password_confirm) {
+				errors = true;
+				$("ul.errors").append("<li>Passwords don't match.</li>");
+				$('input#password').val('');
+				$('input#password-confirm').val('');
+			}
+		} else {
+			if(get.password.length != 0 || get.password_confirm.length != 0) 
+			{
+				if(get.password != get.password_confirm) {
+					errors = true;
+					$("ul.errors").append("<li>Passwords don't match.</li>");
+					$('input#password').val('');
+					$('input#password-confirm').val('');
+				}
+				if(!validate_pwd(get.password))
+				{
+					errors = true;
+					$("ul.errors").append("<li>Password must be atleast 6 characters and contain only letters and numbers.</li>");
+					$('input#password').val('');
+					$('input#password-confirm').val('');
+				}
+			}
+		}
+		
+		if(!errors) {
+			$('form#edit-user').submit();
+		}
+									
+		else
+		{
+			$(window).scrollTop($('html').offset().top);
+		}
+		
+	});
+
+	$('#cancel-user').click(function(){
+		window.location = '/admin/users';
+	});
+	
+});
+</script>
+{% endblock %}
+
+{% block content %}
+	{% if allowed %}
+	<div class="dashboard-utility">
+		<ul class="errors">
+			{% for error in errors %}
+				<li>{{error}}</li>
+			{% endfor %}
+		</ul>
+	<section>
+		{% if user_editted %}<h2 class="action">User settings saved for {{edit_user.username}}.</h2>{% endif %}
+		{% if user_added %}<h2 class="action">User Added</h2>{% endif %}
+		<form id="edit-user" action="{%if edit %}/admin/user/edit/{{edit_user.id}}{% else %}/admin/user/add{% endif %}" method="POST">
+			<input type="hidden" name="id" value="{%if edit %}{{edit_user.id}}{% endif %}" id="id" />
+			{% csrf_token %}
+			<div class="input">
+				<label>Username: </label><input type="textbox" name="username" id="username" value="{%if edit %}{{edit_user.username}}{% endif %}" />
+			</div>
+			<div class="input">
+				<label>Email: </label><input type="textbox" name="email" id="email" value="{%if edit %}{{edit_user.email}}{% endif %}" />
+			</div>
+			{% if current_profile.user_type.type == 'admin' %}
+			<div class="input">
+				<label>IFIC Member</label> <input type="checkbox" name="member" id="memeber" {% if profile.member %}checked="checked"{% endif %} value="1"/>
+			</div>
+			<div class="input">
+				<label>See Hidden Data: </label> <input type="checkbox" name="suppressed" id="suppressed" value="1" {% if profile.suppressed %}checked="checked"{% endif %} />
+			</div>
+			{% endif %}
+			{% if current_profile.user_type.type == 'admin' %}
+			<div class="input">
+				<label>User Type:</label>
+				<select id="user-type" name="user_type">
+					<option value="select">SELECT</option>
+				{% for type in user_types %}
+					<option value="{{type.id}}" {%if edit %}{% if profile %}{% if profile.user_type.id == type.id %}selected="selected"{% endif %}{% endif %}{% endif %}>{{type.type}}</option>
+				{% endfor %}
+				</select>
+			</div>
+			<div class="input">
+				<label>Active:</label>
+				<input name="active" type="checkbox" value="1" {% if edit_user.is_active %}checked="checked"{% endif %}></input>
+			</div>
+			{% endif %}
+			
+			<h2 id="password-header">{% if edit %}Change {% endif %}Password:</h2>
+			<div class="input left">
+				<label>Password: </label><input type="password" name="password" id="password" value="" />
+			</div>
+			<div class="input left">
+				<label>Confirm Password: </label><input type="password" name="password_confirm" id="password-confirm" value="" />
+			</div>
+	
+			{% if current_profile.user_type.type == 'admin' %}
+				<h2 class="sub-header">Reports<a id="checkall" href="#"> (Check All)</a></h2>
+				<table id="includes">
+					<tr>
+						<th id="include">Allow</th>
+						<th id="report-name">Report Name</th>
+					</tr>
+					{% for report in reports %}
+					<tr class="{% cycle 'odd' 'even' %}">
+						<td class="checkbox"><input type="checkbox" name="{{report.id}}" id="{{report.id}}" value="1" {% if report in attached_reports %}checked="checked"{% endif %}/>
+						<td><span>{{report.name}}</span></td>
+					</tr>
+					{% endfor %}
+				</table>
+			{% endif %}
+			<div class="clear-float"></div>
+            <div id="cancel-user" class="form-button">Cancel</div>
+			<div id="save-user" class="form-button">{%if edit %}Save User{% else %}Add User{% endif %}</div>
+		</form>
+	</section>
+	</div>
+	{% endif %}
+{% endblock %}

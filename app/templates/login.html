@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+
+{%block title %}Login{% endblock %}
+
+{%block scripts %}
+<script>
+$(document).ready(function(){
+	$('div#signup').click(function(){
+		$('#consumer-signup-form').submit();
+	});
+});
+</script>
+<script type="text/javascript">
+	function display_errors(errors)
+	{
+		$('div.errors').show();
+		var error_list = $('ul.errors');
+				
+		error_list.children().remove();
+		for(var x = 0; x < errors.length; x++)
+		{
+			error_list.append('<li>' + errors[x] + '</li>');
+		}
+	}
+
+	$(document).ready(function () {
+	
+		$('input').keyup(function(event) {
+			if(event.keyCode == 13)
+  			{
+				$('div.form-button').click();
+			}
+		});
+		
+		$('div.form-button').click(function () {
+			var user = $('#user').val();
+			var password = $('#password').val();
+			var get = { };
+			var errors = new Array();
+			
+			if(user.length > 0)
+			{
+				get.user = user;
+			}
+			else
+			{
+			
+			}
+			
+			if(password.length > 0)
+			{
+				get.password = password
+			}
+			
+			if(errors.length == 0)
+			{
+				$.post('/admin/ajax/login/', get, function(data){
+				
+					if(data.status == 'ok')
+					{
+						window.location = data.redirect;
+					}
+					else
+					{
+						display_errors(data.errors);
+					}
+				
+				});
+			}
+		
+		});
+	});
+</script>
+{% endblock %}
+
+{% block content %}
+	<div class="dashboard-utility">
+		<div class="errors">
+			<ul class="errors">
+			</ul>
+		</div>
+		<h1>Login</h1>
+		<form>
+		<div class="input left">
+			<label>User: </label><input type="text" name="user" id="user" />
+		</div>
+		<div class="input">
+			<label>Password: </label><input type="password" name="password" id="password" />
+		</div>
+		<div class="form-button" id="login-button">Login</div>
+		</form>
+	</div>
+{% endblock %}

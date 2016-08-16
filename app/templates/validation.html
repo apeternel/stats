@@ -1,0 +1,291 @@
+{% extends "base.html" %}
+{% block title %}Validation{% endblock %}
+{% block scripts %}
+<script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8/jquery-ui.min.js"></script>
+<script type="text/javascript">
+$(document).ready(function() {
+
+	$("#datepicker").datepicker({dateFormat: 'yy-mm-dd'});
+
+	$(".expand").click( function() {
+		$(this).parent().parent().find(".errors").toggle();
+		return false;
+	});
+
+	
+	$('.get-view-results').click(function() {
+		var type = $(this).attr('data');
+		
+		var errors = false;
+		var warnings = false;
+		var get = { };
+		
+		
+		$(".errors").hide();
+		$(".warnings").hide();
+		$("ul.errors").children().remove();
+		$("ul.warnings").children().remove();
+		
+		
+		switch(type) {
+			case 'stand-alone':
+				
+				$.get('/admin/ajax/get/standalone', get, function(response) {
+					
+					if(response.sa_response.errors != undefined) 
+					{
+						if(response.sa_response.errors.length)
+						{
+							errors = true;
+							for(var i = 0; i < response.sa_response.errors.length; i++)
+							{
+								$("ul.errors").append("<li>"+response.sa_response.errors[i]+"</li>");
+							}
+						}
+					}
+																	
+					if(response.sa_response.warnings != undefined)
+					{
+						if(response.sa_response.warnings.length)
+						{
+							warnings = true;
+							for(var i = 0; i < response.sa_response.warnings.length; i++)
+							{
+								$("ul.warnings").append("<li>"+response.sa_response.warnings[i]+"</li>");
+							}
+						}
+					}
+					if(errors)
+					{
+						$(".errors").show();
+					}
+																	
+					if(warnings)
+					{
+						$(".warnings").show();
+					}
+				});
+				break;
+			
+			case 'primary-investment':
+				$.get('/admin/ajax/get/primary-investment', get, function(response) {
+					if(response.pim_response.errors != undefined) 
+					{
+						
+						if(response.pim_response.errors.length)
+						{
+							errors = true;
+							for(var i = 0; i < response.pim_response.errors.length; i++)
+							{
+								$("ul.errors").append("<li>"+response.pim_response.errors[i]+"</li>");
+							}
+						}
+					}
+													
+					if(response.pim_response.warnings != undefined)
+					{
+						if(response.pim_response.warnings.length)
+						{
+							warnings = true;
+							for(var i = 0; i < response.pim_response.warnings.length; i++)
+							{
+								$("ul.warnings").append("<li>"+response.pim_response.warnings[i]+"</li>");
+							}
+						}
+					}
+					if(errors)
+					{
+						$(".errors").show();
+					}
+																	
+					if(warnings)
+					{
+						$(".warnings").show();
+					}
+				});
+				break;
+				
+			case 'funds-admin':
+				$.get('/admin/ajax/get/funds-admin', get, function(response) {
+					if(response.av_response.errors != undefined) 
+					{
+						if(response.av_response.errors.length)
+						{
+							errors = true;
+							for(var i = 0; i < response.av_response.errors.length; i++)
+							{
+								$("ul.errors").append("<li>"+response.av_response.errors[i]+"</li>");
+							}
+						}
+					}
+																	
+					if(response.av_response.warnings != undefined)
+					{
+						if(response.av_response.warnings.length)
+						{
+							warnings = true;
+							for(var i = 0; i < response.av_response.warnings.length; i++)
+							{
+								$("ul.warnings").append("<li>"+response.av_response.warnings[i]+"</li>");
+							}
+						}
+					}
+					
+					if(errors)
+					{
+						$(".errors").show();
+					}
+																	
+					if(warnings)
+					{
+						$(".warnings").show();
+					}
+				});	
+				break;
+		}
+		
+
+		
+	});
+	
+	$('.clear-standalone-result').click(function(){
+		var get = { };
+		
+		get.view = 'standalone';
+		$.get('/admin/ajax/clear-result', get, function(response){
+			if(response['status'] == 'ok') {
+				location.reload();
+			}
+			
+		});
+		
+	});
+	
+	$('.clear-primary-investment-result').click(function(){
+		var get = { };
+		
+		get.view = 'primary-investment';
+		$.get('/admin/ajax/clear-result', get, function(response){
+			if(response['status'] == 'ok') {
+				location.reload();
+			}
+			
+		});
+		
+	});
+	
+	$('.clear-funds-admin-result').click(function(){
+		var get = { };
+		
+		get.view = 'funds-admin';
+		$.get('/admin/ajax/clear-result', get, function(response){
+			if(response['status'] == 'ok') {
+				location.reload();
+			}
+			
+		});
+		
+	});
+	
+	$('.aggregate').click( function(){
+		var type;						
+		var get = { };
+		
+		type = $(this).attr('id');
+
+		if(type == 'stand-alone') {
+			get.type = 1;
+		}
+		if(type == 'primary-investment') {
+			get.type = 2;
+		}
+		if(type == 'funds-admin') {
+			get.type = 3;
+		}
+
+		get.suppressed = ($('#suppressed').is(':checked')) ? 1 : 0;
+		get.estimated = ($('#estimated').is(':checked')) ? 1 : 0;
+		
+		$.get('/admin/ajax/aggregate', get, function(response) {
+			location.reload();
+										
+		});
+	});
+							
+	$('#search-data').click(function() {
+		$("#date-form").submit();
+	})
+							
+		
+
+});
+</script>
+{% endblock %}
+{% block content %}
+
+{% if profile.user_type.type == 'admin' %}
+<div class="dashboard-utility">
+
+    <div class="form-button aggregate" id="stand-alone">Generate Stand Alone View </div>
+
+     <!-- <div class="form-button get-view-results" data="stand-alone">Stand Alone View Results</div> -->
+
+    <div class="form-button aggregate" id="primary-investment">Generate Primary Investment Management View</div>
+
+     <!-- <div class="form-button get-view-results" data="primary-investment">Primary Investment Management View Results</div> -->
+
+
+    <div class="form-button aggregate" id="funds-admin">Generate Funds Admin View</div>
+
+    <!-- <div class="form-button get-view-results" data="funds-admin">Funds Admin View Results</div> -->
+ 
+
+    <div class="surpressed"><label class="autosize">Include Suppressed Data:</label><input class="autosize" type="checkbox" name="suppressed" id="suppressed" value="1" /></div>
+        <div id="validation-status">
+    	
+    	</div>
+	<form id="date-form" method="POST" action="/admin/validation">
+		<input type="text" id="datepicker" name="date_range" value="{{default_date}}" />
+		{% csrf_token %}
+		<div id="search-data" class="form-button">Search Data</div>
+	</form>
+	<div class="errors">
+		Error(s):
+		<ul class="errors">
+		</ul>
+	</div>
+	<div class="warnings">
+		Warning(s):
+		<ul class="warnings">
+		</ul>
+		
+		<div class="form-button clear-standalone-result">Clear Stand Alone Result</div>
+		<div class="form-button clear-primary-investment-result">Clear Primary Investment Result</div>
+		<div class="form-button clear-funds-admin-result">Clear Funds Admin Result</div>
+	</div>
+</div>
+<section id="aggregate">
+	<table class="data" id="validation">
+		<tr>
+			<th id="valid-group">Group</th>
+			<th id="valid-first">First Data</th>
+			<th id="valid-second">Second Data</th>
+			<th id="valid-third">Third Data</th>
+		</tr>
+		{% for template in templates %}
+		<tr class="{% cycle 'odd' 'even' %}">
+			<td><span>{{template.contributer.name}} ({{template.contributer.code}})</span></td>
+			<td><span>{% if template.template_one == True %}OK{% else %}{% if template.template_one_errors|length > 0 %}{{template.template_one_errors|length}} Error(s)><a class="expand" href="#">(Click to expand)</a><a class="edit" href="/admin/open/template/{{template.contributer.id}}/1/{{year}}/{{month}}">(Click to edit)</a><ul class="errors validation">{% for error in template.template_one_errors %}<li>{{error.error}}</li>{% endfor %}</ul>{% else %}N/A{% endif %}{% endif %}</span></td>
+			<td><span>{% if template.template_two == True %}OK{% else %}{% if template.template_two_errors|length > 0 %}{{template.template_two_errors|length}} Error(s)<a class="expand" href="#">(Click to expand)</a><a class="edit" href="/admin/open/template/{{template.contributer.id}}/2/{{year}}/{{month}}">(Click to edit)</a><ul class="errors validation">{% for error in template.template_two_errors %}<li>{{error.error}}</li>{% endfor %}</ul>{% else %}N/A{% endif %}{% endif %}</span></td>
+			<td><span>{% if template.template_three == True %}OK{% else %}{% if template.template_three_errors|length > 0 %}{{template.template_three_errors|length}} Error(s)<a class="expand" href="#">(Click to expand)</a><a class="edit" href="/admin/open/template/{{template.contributer.id}}/3/{{year}}/{{month}}">(Click to edit)</a><ul class="errors validation">{% for error in template.template_three_errors %}<li>{{error.error}}</li>{% endfor %}</ul>{% else %}N/A{% endif %}{% endif %}</span></td>
+		</tr>
+		{% endfor %}
+	</table>
+</section>
+{% else %}
+<div class="dashboard-utility">
+	<h2>Invalid Permissions.</h2>
+</div>
+{% endif %}
+
+{% endblock %}

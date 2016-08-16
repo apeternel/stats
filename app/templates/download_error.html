@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+
+{% block title %}Download Error{% endblock %}
+
+{% block scripts %}
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-utility">
+	<h2>Download Error</h2>
+	<ul>
+	{% for error in errors %}
+		<li>{{error}}</li>
+	{% endfor %}
+	</ul>
+</div>
+
+
+{% endblock %}

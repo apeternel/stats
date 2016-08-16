@@ -1,0 +1,190 @@
+{% extends "base.html" %}
+{% block title %}Reports{% endblock %}
+{% block scripts %}
+<link rel="stylesheet" href="/files/css/jquery.autocomplete.css"></link>
+<link rel="stylesheet" href="/files/css/fileuploader.css"></link>
+
+<script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8/jquery-ui.min.js"></script>
+<script type="text/javascript" src="/files/js/jquery.bgiframe.min.js"></script>
+<script type="text/javascript" src="/files/js/jquery.autocomplete.js"></script>
+<script type="text/javascript" src="/files/js/fileuploader.js"></script>
+<script type="text/javascript">
+
+
+$(document).ready(function() {
+                              
+	$("#datepicker").datepicker({dateFormat: 'yy-mm-dd'});
+	var uploader = new qq.FileUploader({
+    	element: document.getElementById('file-uploader'),
+    			
+    	// path to server-side upload script
+    	action: '/admin/upload/timeseries',
+    	params: {
+    		csrfmiddlewaretoken: $('input[name=csrfmiddlewaretoken]').val(),
+    		report:  function() { return $('#report-dropdown').val(); },
+    		date: function() { return $('#datepicker').val(); },
+    	},
+    	allowedExtensions: ['xls', 'ppt', 'pdf'],
+    	onComplete: function(id, file_name, jsonResponse)
+    	{
+            
+            $("#upload-result").children().remove();
+            $("#upload-result").append("<li>" + jsonResponse.report_name + " uploaded.</li>");
+            
+    		var id = parseInt(jsonResponse.report);
+    		var upload_check = false;
+    		$('ul#reports-uploaded li').each(function(index){
+
+    			if($(this).attr('id') == id)
+    			{
+    				upload_check = true;	
+    			}
+    		});
+    		
+    		if(upload_check == false)
+    		{
+    			$('#reports-uploaded').append('<li id="'+  jsonResponse.report + '">'  + jsonResponse.report_name + '</li>');
+    		}
+    		
+    	}
+	});
+});
+
+
+</script>
+{% endblock %}
+{% block content %}
+{% if allowed %}
+<div class="dashboard-utility">
+	<div class="clear-float"></div>
+	<section id="reports">
+		<div class="input left">
+			<select id="report-dropdown">
+				{% for report in reports %}
+				<option value="{{report.id}}">{{report.name}}</option>
+				{% endfor %}
+			</select>
+		</div>
+		<div class="input left" id="file-uploader">
+		</div>
+		<label>Upload Data For Month: </label><input type="text" id="datepicker" name="date_range" value="{{default_date}}" />
+        <ul id="upload-result">
+        </ul>
+		<div>
+			Reports Uploaded For Current Upload Month ({{default_date}})
+			{% if reports_uploaded|length == 0 %}
+			<ul>
+				<li>No Reports Uploaded</li>
+			</ul>
+			{% else %}
+			<ul id="reports-uploaded">
+				{% for r in reports_uploaded %}
+					<li id="{{r.id}}">{{r.name}}</li>
+				{% endfor %}
+			</ul>
+			{% endif %}
+			
+		</div>
+		
+	</section>
+</div>	
+<section id="report-tables">
+	<h2 class="report-download">Stand Alone View</h2>
+    <sub class="report-download"><a href="/admin/download/view/0"> (Download)</a></sub>
+    <div class="table-container">
+    	<table class="data" id="sa-report">
+    		<tr>
+    			<th>IFIC Code</th>
+    			<th>Net Assets</th>
+    			<th>Cash & Short-Term</th>
+    			<th>Gross Sales</th>
+    			<th>Reinvested Dist.</th>
+    			<th>Gross Redemp.</th>
+    			<th>Transfers In</th>
+    			<th>Transfers Out</th>
+    		</tr>
+    		{% for record in sa_report %}
+    		{% if record.0|length <= 7 and record.0|length > 0 %}
+    		<tr class="{% cycle 'odd' 'even' %}">
+    			<td><a href="#">{{record.0}}</a></td>
+    			<td><a href="#">{{record.14}}</a></td>
+    			<td><a href="#">{{record.15}}</a></td>
+    			<td><a href="#">{{record.16}}</a></td>
+    			<td><a href="#">{{record.17}}</a></td>
+    			<td><a href="#">{{record.18}}</a></td>
+    			<td><a href="#">{{record.19}}</a></td>
+    			<td><a href="#">{{record.20}}</a></td>
+    		</tr>
+    		{% endif %}
+    		{% endfor %}
+    	</table>
+    </div>
+	
+	<h2 class="report-download">Primary Investment Management View</h2>
+    <sub class="report-download"><a href="/admin/download/view/1"> (Download)</a></sub>
+    <div class="table-container">
+    	<table class="data" id="pim-report">
+    		<tr>
+    			<th>IFIC Code</th>
+    			<th>Net Assets</th>
+    			<th>Cash & Short-Term</th>
+    			<th>Gross Sales</th>
+    			<th>Reinvested Dist.</th>
+    			<th>Gross Redemp.</th>
+    			<th>Transfers In</th>
+    			<th>Transfers Out</th>
+    		</tr>
+    		{% for record in pim_report %}
+    		{% if record.0|length <= 7 and record.0|length > 0 %}
+    		<tr class="{% cycle 'odd' 'even' %}">
+    			<td><a href="#">{{record.0}}</a></td>
+    			<td><a href="#">{{record.14}}</a></td>
+    			<td><a href="#">{{record.15}}</a></td>
+    			<td><a href="#">{{record.16}}</a></td>
+    			<td><a href="#">{{record.17}}</a></td>
+    			<td><a href="#">{{record.18}}</a></td>
+    			<td><a href="#">{{record.19}}</a></td>
+    			<td><a href="#">{{record.20}}</a></td>
+    		</tr>
+    		{% endif %}
+    		{% endfor %}
+    	</table>
+    </div>
+	<h2 class="report-download">Fund Administration View</h2>
+    <sub class="report-download"><a href="/admin/download/view/2"> (Download)</a></sub>
+    <div class="table-container">
+    	<table class="data" id="fav-report">
+    		<tr>
+    			<th>IFIC Code</th>
+    			<th>Net Assets</th>
+    			<th>Cash & Short-Term</th>
+    			<th>Gross Sales</th>
+    			<th>Reinvested Dist.</th>
+    			<th>Gross Redemp.</th>
+    			<th>Transfers In</th>
+    			<th>Transfers Out</th>
+    		</tr>
+    		{% for record in fav_report %}
+    		{% if record.0|length <= 7 and record.0|length > 0 %}
+    		<tr class="{% cycle 'odd' 'even' %}">
+    			<td><a href="#">{{record.0}}</a></td>
+    			<td><a href="#">{{record.14}}</a></td>
+    			<td><a href="#">{{record.15}}</a></td>
+    			<td><a href="#">{{record.16}}</a></td>
+    			<td><a href="#">{{record.17}}</a></td>
+    			<td><a href="#">{{record.18}}</a></td>
+    			<td><a href="#">{{record.19}}</a></td>
+    			<td><a href="#">{{record.20}}</a></td>
+    		</tr>
+    		{% endif %}
+    		{% endfor %}
+    	</table>
+    </div>
+</section>
+{% else %}
+<div class="dashboard-utility">
+	<h2>Invalid permissions.</h2>
+</div>
+{% endif %}
+
+{% endblock %}

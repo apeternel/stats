@@ -1,0 +1,416 @@
+{% extends "base.html" %}
+
+{%block title %}Purchase{{package.name}}{% endblock %}
+
+{% block scripts %}
+<script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8/jquery-ui.min.js"></script>
+<link rel="stylesheet" href="/files/css/jquery.autocomplete.css"></link>
+<script type="text/javascript" src="/files/js/jquery.bgiframe.min.js"></script>
+<script type="text/javascript" src="/files/js/jquery.autocomplete.js"></script>
+<script type="text/javascript">
+	 
+     function validateCreditCard(cc) 
+     {
+     	var sum = 0;
+        var x = 0;
+                
+        for(x = cc.length - 2; x >= 0; x -= 2) 
+        {
+        	sum += Array(0, 2, 4, 6, 8, 1, 3, 5 , 7, 9) [parseInt(cc.charAt(x), 10)];
+        }
+                
+        for(x = cc.length - 1; x >= 0; x -= 2) 
+        {
+            sum += parseInt(cc.charAt(x), 10);
+        }
+                
+        return (sum % 10) == 0;
+     }
+
+
+	$(document).ready(function(){
+								
+		var card_type;
+     	var card_length;
+		var total = 0;
+			
+		$("input[type=radio]").click( function() {
+			if($(this).val() == 'credit_card')
+			{
+				$(".credit-card").show();
+			}
+			else
+			{
+				$(".credit-card").hide();
+			}
+		});
+							
+		$("table input[type=checkbox]").click( function() {
+			
+			var id = $(this).attr('name').split('-')[1];
+			
+			if($(this).is(':checked'))
+			{
+				$("form[name=parent-"+id+"] input[type=radio]").removeAttr('disabled');
+				$('form[name=parent-'+id+'] input[type=radio]:checked').each( function() {
+					price = $(this).attr('rel').split('-')[1];
+					total = (parseFloat(total) + parseFloat(price)).toFixed(2);
+					$('#total').text('Total: $'+total);
+				})
+			}
+			else
+			{
+				$("form[name=parent-"+id+"] input[type=radio]").attr('disabled', 'disabled');
+				$('form[name=parent-'+id+'] input[type=radio]:checked').each( function() {
+					price = $(this).attr('rel').split('-')[1];
+					total = (parseFloat(total) - parseFloat(price)).toFixed(2);
+					$('#total').text('Total: $'+total);
+				});
+			}
+			
+		});
+								
+		$('table input[type=radio]').click( function () {
+			
+			$(this).parent().find('input[type=radio]').each( function() {
+				if($(this).is(':checked'))
+				{
+					var price = $(this).attr('rel').split('-')[1];
+					total = (parseFloat(total) + parseFloat(price)).toFixed(2);
+				}
+				else
+				{
+					var price = $(this).attr('rel').split('-')[1];
+					total = (parseFloat(total) - parseFloat(price)).toFixed(2);
+				}
+				$('#total').text('Total: $'+total);
+			})
+			
+		});					
+								
+	  	$('#credit_card').keyup(function() {
+        	var data = $(this).val();
+                    
+            // Visa
+            if(data.length == 1) {
+            	if (data == '4') {
+                	card_type = 'visa';
+                }
+            }
+    
+            if (data.length == 2) {
+            // Mastercard
+            	if (data.match(/5[0-5]/gi)) {
+                	card_type = 'master';
+                }
+                        
+                if (data.match(/3[4-7]/gi)) {
+                	card_type = 'amex';
+                }
+             }
+                    
+             if (data.length == 4) {
+             	if (data == '6011') {
+                	card_type = 'discover';
+                }
+             }
+                    
+             $('#card_type').html(card_type);
+        });
+	
+		$('#purchase').click(function () {
+		
+			var post = { };
+			var packages = Array();
+			var errors = false;
+			var creditCard = false;
+			if($("input[name=payment_type]:checked").val() == 'credit_card')
+			{
+				creditCard = true;
+			}
+			
+			$("ul.errors").children().remove();
+			$(".errors").hide();
+			
+			$("table input[type=checkbox]:checked:enabled").each( function() {
+				var package = { };
+                var paymentMethod;
+				package = $(this).attr('name').split('-');
+                package.push("payment");
+                paymentMethod = $("form[name="+$(this).attr('name')+"] input[type=radio]:checked").val();
+                package.push(paymentMethod);
+				packages.push(package);
+			});
+			
+			post.csrfmiddlewaretoken = $("input[name=csrfmiddlewaretoken]").val();
+			
+			if(creditCard)
+			{
+				post.credit_card = $('#credit_card').val().replace(/[^\d]/g, "");
+				post.ccv = $('#ccv').val();
+				post.month = $('#expiry_month').val();
+				post.year = $('#expiry_year').val();
+				post.name = $('#name').val();
+			}
+			
+			post.payment_type = $("input[name=payment_type]:checked").val();
+			post.city = $('#city').val();
+			post.country = $('#country').val();
+			post.state = $('#state').val();
+			post.address = $('#address').val();
+			post.zip = $('#zip').val();
+			post.packages = packages;
+			post.packageCount = packages.length;
+			
+			if(packages.length <= 0)
+			{
+				errors = true;
+				$("ul.errors").append("<li>You must purchase atleast one product.</li>");
+			}
+			
+			if(post.address.length == 0)
+			{
+				errors = true;
+				$("ul.errors").append("<li>Invalid billing address provided.</li>");
+			}
+			
+			if(post.city.length == 0)
+			{
+				errors = true;
+				$("ul.errors").append("<li>Invalid city provided.</li>");
+			}
+			
+			if(post.country.length != 2)
+			{
+				errors = true;
+				$("ul.errors").append("<li>Invalid country provided.</li>");
+			}
+			
+			if(post.state.length != 2)
+			{
+				errors = true;
+				$("ul.errors").append("<li>Invalid state/province provided.</li>");
+			}
+			
+			if(post.zip.length == 0)
+			{
+				errors = true;
+				$("ul.errors").append("<li>Invalid zip/postal code provided.</li>");
+			}
+			
+			if(creditCard)
+			{
+				if(post.name.length == 0)
+				{
+					errors = true;
+					$("ul.errors").append("<li>Invalid card holder name.</li>");
+				}
+			
+				if(post.ccv.length != 3)
+				{
+					errors = true;
+					$("ul.errors").append("<li>Invalid CCV provided.</li>");
+				}
+				
+				if(!validateCreditCard(post.credit_card))
+				{
+					errors = true;
+					$("ul.errors").append("<li>Invalid credit card provided.</li>");
+				}
+				
+				var current_year = {{current_year}};
+	            var current_month = {{current_month}};
+				
+				if(post.year < current_year) 
+				{
+					var errors = true;
+					$("ul.errors").append("<li>Please provide a valid year.</li>");
+	            } 
+	           	else if (post.year == current_year) 
+	           	{
+	            	if (post.month <= current_month) 
+	            	{
+						errors = true;
+						$("ul.errors").append("<li>Please provide a valid month.</li>");
+	                }
+	            }
+			}
+			
+            if($("#agree").is(":checked") == false)
+            {
+				errors = true;
+				$("ul.errors").append("<li>You must agree to the terms and privacy.</li>");
+			}
+            
+            if(!errors)
+            {
+				 $.ajax({url: '/admin/ajax/purchase', data: post, type: 'POST', dataType: 'json', success: function(response) {
+					 if(response.status == 'ok')
+					 {
+					 	window.location = response.redirect;
+					 }
+					 else
+					 {
+					 	$("ul.errors").children().remove();
+					 	for(var i = 0; i < response.errors.length; i++)
+					 	{
+							$("ul.errors").append("<li>"+response.errors[i]+"</li>");
+						}
+						$(".errors").show();
+						$(window).scrollTop($('html').offset().top)
+					 }
+				 }});
+			}
+			else
+			{
+				$(".errors").show();
+				$(window).scrollTop($('html').offset().top)
+			}
+		});
+	
+	});
+</script>
+{% endblock %}
+
+{% block content %}
+{% if errors|length == 0 %}
+<div class="dashboard-utility">
+<section>
+	<div class="errors">
+		Error(s)
+		<ul class="errors">
+		{% for error in errors %}
+			<li>{{error}}</li>
+		{% endfor %}
+		</ul>
+	</div>
+</section>
+{% endif %}
+<h2 class="sub-header">Packages</h2>
+<div>
+	<table>
+		<tr>
+			<th>Package Name</th>
+			<th>Package Price</th>
+		</th>
+		{% for package in packages %}
+		<tr>
+			<td><span><h2><input type="checkbox" name="parent-{{package.id}}" value="" /> {{package.name}} </h2></span></td>
+			<td><span>1Y/${{package.price|floatformat:2}} 1M/${{package.per_file_price|floatformat:2}}</span></td>
+		</tr>
+		<tr>
+			<td colspan="2">
+				<span>
+                    Please Specify the term of your purchase
+                </span>
+                <form name="parent-{{package.id}}" class="package">
+					<label>Annual:</label><input checked="checked" rel="price-{{package.price}}" disabled="disabled" type="radio" name="term" id="term" value="1" />
+					{% if package.quarterly %}
+					<label>Quarterly:</label><input rel="price-{{package.per_file_price}}" disabled="disabled" type="radio" name="term" id="term" value="2" />
+					{% else %}
+					<label>Monthly:</label><input rel="price-{{package.per_file_price}}" disabled="disabled" type="radio" name="term" id="term" value="3" />
+					{% endif %}
+                </form>
+			</td>
+		</tr>
+		<tr id="parent-{{package.id}}">
+			<td colspan="2">
+			<span>Reports Included</span>
+			<ul>
+				{% for report in package.reports.all %}
+				<li>{{report.name}}</li>
+				{% endfor %}
+			</ul>
+			</td>
+		</tr>
+		{% endfor %}
+		<tr>
+			<td></td>
+			<td><span><h2 id="total">Total: $0.00</h2></span></td>
+		</tr>
+	</table>
+</div>
+{% csrf_token %}
+<div id="purchase-form">
+	<h2 class="sub-header">Billing Details</h2>
+	<div class="clear-float"></div>
+	<div class="input" id="payment_type">
+		<input type="radio" name="payment_type" value="cheque">Cheque</input>
+		<input type="radio" name="payment_type" value="credit_card" checked="checked">Credit Card</input>
+	</div>
+	<div class="clear-float"></div>
+	<div class="input credit-card">
+		<label>Cardholder Name: </label>
+		<input type="text" name="name" id="name" value="" />
+	</div>
+	<div class="input">
+		<label>Billing Address</label>
+		<input type="text" name="address" id="address" value="" />
+	</div>
+	<div class="input">
+		<label>City</label>
+		<input type="text" name="city" id="city" value="" />
+	</div>
+	<div class="input">
+		<label>Province</label>
+		<select name="state" id="state">
+		{% for state in states %}
+			<option value="{{state.0}}">{{state.1}}</option>
+		{% endfor %}
+		</select>
+	</div>
+	<div class="input">
+		<label>Zip/Postal Code</label>
+		<input type="text" name="zip" id="zip" value="" />
+	</div>
+	<div class="input">
+		<label>Country</label>
+		<select name="country" id="country">
+		{% for country in countries %}
+			<option value="{{country.0}}">{{country.1}}</option>
+		{% endfor %}
+		</select>
+	</div>
+	<div class="input credit-card">
+		<label>Credit Card</label>
+		<input type="text" name="credit_card" id="credit_card" value="" /><div id="card_type"></div>
+	</div>
+	<div class="input credit-card">
+		<label>CCV</label>
+		<input type="text" name="ccv" id="ccv" value="" maxlength="3" />
+	</div>
+	<div class="input credit-card">
+		<label>Expiry Month</label>
+		<select id="expiry_month" name="expiry_month">
+			<option value="01">January</option>
+			<option value="02">February</option>
+			<option value="03">March</option>
+			<option value="04">April</option>
+			<option value="05">May</option>
+			<option value="06">June</option>
+			<option value="07">July</option>
+			<option value="08">August</option>
+			<option value="09">September</option>
+			<option value="10">October</option>
+			<option value="11">November</option>
+			<option value="12">December</option>
+		</select>
+		Year
+		<select id="expiry_year" name="expiry_year">
+		{% for year in years %}
+		<option id="{{year}}">{{year}}</option>
+		{% endfor %}
+		</select>
+	</div>
+
+	<div class="input left">
+		I have agreed to the terms and privacy <input type="checkbox" class="checkbox" name="agree" id="agree" value="1" />
+	</div>
+	<div class="clear-float"></div>
+	<div class="input">
+		<div class="form-button" id="purchase">Finish</div>
+	</div>
+</div>
+{% endblock %}
+
+

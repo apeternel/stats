@@ -1,0 +1,429 @@
+{% extends "base.html" %}
+
+{%block title %}{{title}}{% endblock %}
+
+
+{%block scripts %}
+<link rel="stylesheet" href="/files/css/jquery.autocomplete.css"></link>
+<script type="text/javascript" src="/files/js/jquery.bgiframe.min.js"></script>
+<script type="text/javascript" src="/files/js/jquery.autocomplete.js"></script>
+<script type="text/javascript" src="/files/js/validation.js"></script>
+<script type="text/javascript">
+	
+	function display_errors(errors)
+	{
+		$('div.errors').show();
+		var error_list = $('ul.errors');
+						
+		error_list.children().remove();
+		for(var x = 0; x < errors.length; x++)
+		{
+			error_list.append('<li>' + errors[x] + '</li>');
+		}
+	}
+
+	$(document).ready(function() {
+		
+		$('#exists').prop('checked', true);
+		$("#existing-user").show();
+		
+		$('div#delete-contributer').click(function () {
+			var answer = confirm('Are you sure you want to delete this group?');								
+			var get = { };
+			get.id = $('#id').val();
+			
+			if(answer) {
+				$.get('/admin/ajax/delete/group', get, function(data) {
+					window.location = "/admin/groups";
+				});
+			}
+		
+		});
+		
+		$(".remove").click(function() {
+			$(this).parent().remove();
+		});
+		
+		$('div#add-contributer').click(function () {
+
+			$("#add-group-errors").children().remove();
+			
+			$('input').removeClass('errors');
+			$('select').removeClass('errors');
+			
+			var errors = false;
+			var get = { };
+			
+			{% if edit %}
+			get.id = $('#id').val();
+			{% endif %}
+			
+			get.name = $('#contributer-name').val();
+			get.code = $('#contributer-code').val();
+			get.status = $('input[name=contributer-status]:checked').val();
+			get.industry = $('#industry').val();
+
+			var users = Array();
+			var template2 = Array();
+			var template3 = Array();
+			
+			$("ul.users li").each(function() {
+				users.push($(this).attr("id"));
+			});	
+			
+			
+			$('ul#template2_funds li').each(function(){
+				template2.push($(this).attr('data'));
+			});
+			
+			$('ul#template3_funds li').each(function(){
+				template3.push($(this).attr('data'));
+			});
+			
+			get.allowed_template2 = template2;
+			get.allowed_template3 = template3;
+			get.users = users;
+			
+			{% if profile.user_type.type == 'admin' %}
+			if($('#contributer-hide').is(':checked'))
+			{
+				get.hide = 1;
+			}
+			else
+			{
+				get.hide = 0;
+			}
+			{% endif %}
+			
+			if(get.users.length <= 0)
+			{
+				errors = true;
+				$("#add-group-errors").append("<li>You must have atleast one user.</li>");
+				$("#search").addClass('errors');
+			}
+			
+			if(get.name.length == 0) {
+				errors = true;
+				$("#add-group-errors").append("<li>Group name must contain characters.</li>");
+				$("#contributer-name").addClass('errors');
+			}
+			
+			if($('#code-check').val() != 1) {
+				errors = true;
+				$("#add-group-errors").append("<li>You must verify the group code.</li>");
+				$('#contributer-code').addClass('errors');
+				if(get.code.length != 3) {
+					$("#add-group-errors").append("<li>Group code must be 3 characters long..</li>");
+					$('#contributer-code').addClass('errors');
+				}
+			}
+			
+			if(!get.status){
+				errors = true;
+				$("#add-group-errors").append("<li>You must select a status for the group.</li>");
+			}
+			
+			if(get.industry == 'select'){
+				errors = true;
+				$("#add-group-errors").append('<li>You must select an industry for the group.</li>');
+				$('#industry').addClass('errors');
+			}
+			
+			if(!errors) {
+				{% if edit %}
+				var url = '/admin/ajax/edit/group';
+				{% else %}
+				var url = '/admin/ajax/add/group';
+				{% endif %}
+				
+				$.get(url, get, function(data) {
+					if(data.status == 'ok')
+					{
+						window.location = "/admin/groups"
+					}
+					else
+					{
+						display_errors(data.errors);
+					}
+				});
+			}
+		});
+		
+		
+		$('#contributer-code').keyup( function() {
+			
+			var get = { };
+			
+			get.code = $('#contributer-code').val();
+			
+			if(get.code.length == 3)
+			{
+				$.get('/admin/ajax/check/group/code', get, function(data) {
+					if(data.status == 'ok')
+					{
+						$('#code-availability').html('OK');
+						$('#code-availability').removeClass('error');
+						$('#code-availability').addClass('ok');
+						$('#code-check').val(1);
+					}
+					else
+					{
+						$('#code-availability').html("INVALID");
+						$('#code-availability').removeClass('ok');
+						$('#code-availability').addClass('error');
+						$('#code-check').val(0);
+					}
+				});
+			}
+			else
+			{
+				$('#code-availability').html("INVALID");
+				$('#code-availability').removeClass('ok');
+				$('#code-availability').addClass('error');
+				$('#code-check').val(0);
+			}
+			
+		});
+
+		$('input#search').autocomplete('/admin/ajax/find/user', {
+		
+			parse: function(data) {
+                return $.map(data, function(row) {
+                    return { data:row, value:row[1], result:row[0] };
+                });
+            }
+		
+		}).result(function(e, data, value){
+			$('input#user').val(data[1]);
+		});
+		
+		$('input#find-fund2').autocomplete('/admin/ajax/find/fund', {
+			
+			parse: function(data) {
+                return $.map(data, function(row) {
+                    return { data:row, value:row[1], result:row[0] };
+                });
+            }
+		
+		}).result(function(e, data, value){
+			var full_value = data[0] + ' - ' + data[5];
+			$("input[name=fund_search2]").val(full_value);
+			$('#fund').val(data[1]);
+		});
+		
+		
+		$('input#find-fund3').autocomplete('/admin/ajax/find/fund', {
+			
+			parse: function(data) {
+                return $.map(data, function(row) {
+                    return { data:row, value:row[1], result:row[0] };
+                });
+            }
+		
+		}).result(function(e, data, value){
+			var full_value = data[0] + ' - ' + data[5];
+			$('#fund').val(data[1]);
+			$("input[name=fund_search3]").val(full_value);
+		});
+		
+		
+		
+		$('div#add-fund2-button').click(function(){
+			
+			var id = $("input#fund").val();
+			$('ul.errors').children().remove();
+			if(id)
+			{
+	
+				var exists = false;
+				$('ul#template2_funds li').each(function(index){
+					if($(this).attr('data') == id)
+						exists = true;
+				});
+				
+				if(exists)
+					$('ul.errors').append('<li>Fund already added.</li>');
+				else
+				{
+					$('ul#template2_funds').append('<li data="'+id+'">'+$("input[name=fund_search2]").val()+' <a data='+id+' class="remove" href="#">(remove)</a></li>');
+				}
+			}
+			
+		});
+		
+		$('div#add-fund3-button').click(function(){
+			
+			var id = $("input#fund").val();
+			$('ul.errors').children().remove();
+			
+			if(id)
+			{
+				var exists = false;
+				$('ul#template3_funds li').each(function(index){
+					if($(this).attr('data') == id)
+						exists = true;
+					
+				});
+				
+				if(exists)
+					$('ul.errors').append('<li>Fund already added.</li>');
+				else
+				{
+					$('ul#template3_funds').append('<li data="'+id+'">'+$("input[name=fund_search3]").val()+'<a data='+id+' class="remove" href="#">(remove)</a></li>');
+				}
+			}
+			
+		});
+		
+		
+		$('div#add-user').click(function(){
+			var id = $("input#user").val();
+			$('ul.errors').children().remove();
+			if(id)
+			{
+				if($('li#' + id).length != 0)
+				{ 
+					$('ul.errors').append('<li>User already added.</li>');
+				}
+				else
+				{
+					if(id != '')
+					{
+						$('ul#users').append('<li id="'+id+'">'+$("input[name=search]").val()+' - <a id='+id+' class="remove" href="#">(remove)</a></li>');
+					}
+				}
+			}
+			
+		});
+		
+		
+		$('a.remove').live("click", function(e){
+			//var id = $(this).attr('data');
+			//$('li#' + id).remove();
+			
+			$(this).closest('li').remove();
+			return false;
+		});
+	
+		
+		$('#cancel-contributer').click(function(){
+			window.location = '/admin/groups';
+		});
+		
+	});
+</script>
+{% endblock %}
+{% block content %}
+	{% if allowed %}
+	<div class="dashboard-utility">
+			<div id="add-group">
+			<ul id="add-group-errors" class="errors">
+			</ul>
+			<h2>{{title}}:</h2>
+			<div class="clear-float"></div>
+			<form>
+				<input type="hidden" id="code-check" value="{% if edit %}1{% else %}0{% endif %}" />
+				<input type="hidden" id="user" name="user" value="{% if edit %}{{contributer.user.id}}{% endif %}" />
+				<input type="hidden" id="fund" name="fund" value="" />
+				{% if edit %}
+				<input type="hidden" id="id" value="{{contributer.id}}" />
+			{% endif %}
+					<div class="input left">
+						<label>Group Name:</label> <input type="text" name="contributer-name" id="contributer-name" {% if contributer %}value="{{contributer.name}}"{% endif %}/>
+					</div>
+					<div class="input">
+						<label>Group Code:</label> 
+						{% if edit %}
+							<span>{{contributer.code}}</span>
+						{% else %}
+							<input maxlength=3" type="text" name="contributer-code" id="contributer-code"/>
+							<span id="code-availability"></span> 
+						{% endif %}
+					</div>
+					<div class="input left">
+						<label>Industry:</label> 
+						<select id="industry" name="industry">
+							<option value="select">SELECT</option>
+						{% for industry in industries %}
+							<option value="{{industry.id}}" {% if edit %}{% if contributer.industry.id == industry.id%} selected="selected"{% endif %}{% endif %}>{{industry.name}} ({{industry.code}})</option>
+						{% endfor %}
+						</select>
+					</div>
+					<div class="input"> 
+						<label>Status:</label>
+						<label class="autosize">Active</label>
+						<input class="autosize" type="radio" name="contributer-status" value="1" {% if edit %} {% if contributer.active == 1 %}checked{% endif %}{% endif %}/> <label class="autosize">Disabled</label>
+						<input class="autosize" type="radio" name="contributer-status" value="0" {% if edit %}{% if contributer.active == 0 %} checked {% endif %} {% endif %} />
+					</div>
+				
+					{% if profile.user_type.type == 'admin' %}
+					<div class="input left"> 
+						<label>Hide Data:</label>
+						<label class="autosize">Hide</label>
+						<input class="autosize" type="checkbox" name="contributer-hide" id="contributer-hide" value="1" {% if edit %} {% if contributer.hide == 1 %}checked{% endif %}{% endif %}/>
+					</div>
+					{% endif %}
+					<div class="input left" id="existing-user">
+						<label>User:</label><input type="textbox" id="search" name="search" class="ui-autocomplete" /><div class="form-button" id="add-user">Add User</div>
+					</div>
+					<div class="input left">
+						<h2>Users:</h2>
+						<ul class="users" id="users">
+							{% for u in users %}
+							<li id="{{u.id}}">{{u.username}} <a class="remove" href="#">(remove)</a></li>
+							{% endfor %}
+						</ul>
+					</div>
+					<div class="input template-summary">
+						<label>Allowed in T2</label>
+						
+						<input type="text" id="find-fund2" name="fund_search2" class="ui-autocomplete" /> 
+						<div class="form-button" id="add-fund2-button">Add Fund</div>
+					</div>
+					<div class="input template-summary">
+						<h2>Template 2:</h2>
+						<ul id="template2_funds">
+							{% for t in template2 %}
+							<li data="{{t.fund.id}}">{{t.fund.name}} - {{t.fund.contributer.code|upper}}*{{t.fund.code|upper}} <a class="remove" href="#">(remove)</a></li>
+							{% endfor %}
+						</ul>
+					</div>
+					<div class="input template-summary">
+						<label>Allowed in T3</label>
+						
+						<input type="text" id="find-fund3" name="fund_search3" class="ui-autocomplete" /> 
+						<div class="form-button" id="add-fund3-button">Add Fund</div>
+					
+					</div>
+					<div class="input template-summary">
+						<h2>Template 3:</h2>
+						<ul id="template3_funds">
+							{% for t in template3 %}
+							<li data="{{t.fund.id}}">{{t.fund.name}} - {{t.fund.contributer.code|upper}}*{{t.fund.code|upper}} <a class="remove" href="#">(remove)</a></li>
+							{% endfor %}
+						</ul>
+					</div>
+					<div class="clear-float"></div>
+					<div>
+						{% if edit %}
+						<div class="form-button" id="add-contributer">
+							Save Group
+						</div>
+						<div class="form-button" id="delete-contributer">
+							Delete Group
+						</div>
+						{% else %}
+						<div id="cancel-contributer" class="form-button">Cancel</div>
+						<div class="form-button" id="add-contributer">Add Group</div>
+						{% endif %}
+					</div>
+			</form>
+		<div class="clear-float"></div>
+	</div>
+	{% else %}
+	<section>
+		<h2>Invalid permissions</h2>
+	</section>
+	{% endif %}
+
+{% endblock %}

@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{%block title %}Packages{% endblock %}
+
+
+{%block scripts %}
+
+{% endblock %}
+{% block content %}
+{% if allowed %}
+<div class="dashboard-utility">
+    <div class="form-button"><a href="/admin/package/add">Add Package</a></div>
+</div>
+<div>
+	<table class="data">
+		<tr>
+			<th>Name</th>
+			<th>Description</th>
+			<th>Annual Price</th>
+			<th>Per File Price</th>
+		</tr>
+		{% for package in packages %}
+		<tr class="{% cycle 'odd' 'even' %}">
+			<td><a href="/admin/package/edit/{{package.id}}">{{package.name}}</a></td>
+			<td><a href="/admin/package/edit/{{package.id}}">{{package.description}}</a></td>
+			<td><a href="/admin/package/edit/{{package.id}}">${{package.price|floatformat:2}}</a></td>
+			<td><a href="/admin/package/edit/{{package.id}}">{% if package.per_file_price %}${{package.per_file_price|floatformat:2}}{% else %}N/A{% endif %}</a></td>
+		</tr>
+		{% endfor %}
+	</table>
+</div>
+{% else %}
+<div class="dashboard-utility">
+	<h2>Invalid permissions.</h2>
+</div>
+{% endif %}
+{% endblock %}

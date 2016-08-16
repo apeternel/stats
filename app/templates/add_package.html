@@ -1,0 +1,154 @@
+{% extends "base.html" %}
+
+{%block title %}{{title}}{% endblock %}
+
+
+{%block scripts %}
+<script>
+$(document).ready(function(){
+							
+	$('#check-all').click( function() {
+		$('input[type=checkbox]').each( function() {
+			if(!$(this).is(":checked"))
+			{
+				$(this).click();
+			}
+		});
+	});
+							
+	$('#package-button').click(function(){
+		
+		var errors = false;
+		var annualPrice;
+		var pricePerFile;
+		var description;
+		
+		$("ul.errors").children().remove();
+		$('input').removeClass('errors');
+		$('textarea').removeClass('errors');
+		$(".errors").hide();
+		
+		if($("input[name=package_name]").val() == '')
+		{
+			errors = true;
+			$("ul.errors").append("<li>Package name must be entered.</li>");
+			$('input[name=package_name]').addClass('errors');
+		}
+				
+		annualPrice = $("input[name=package_annual_price]").val();
+		if(annualPrice == '')
+		{
+			errors = true;
+			$("ul.errors").append("<li>Annual price must be entered.</li>");
+			$('input[name=package_annual_price]').addClass('errors');
+		}
+		else
+		{
+			annualPrice = parseInt(annualPrice);
+			if(isNaN(annualPrice))
+			{
+				errors = true;
+				$("ul.errors").append("<li>Annual Price must be a number.</li>");
+				$('input[name=package_annual_price]').addClass('errors');
+			}
+		}
+					
+		pricePerFile = $("input[name=package_per_file_price]").val();					
+		if(pricePerFile == '')
+		{
+			errors = true;
+			$("ul.errros").append("<li>Price per file must be entered.</li>");
+			$("input[name=package_per_file_price]").addClass('errors');
+		}
+		else 
+		{
+			pricePerFile = parseInt(pricePerFile);
+			if(isNaN(pricePerFile))
+			{
+				errors = true;
+				$("ul.errors").append("<li>Price per file must be a numeric value.</li>");
+				$("input[name=package_per_file_price]").addClass('errors');
+			}
+		}
+		
+		description = $("#package-description").val();
+		if(description.length >= 255)
+		{
+			errors = true;
+			$("ul.errors").append("<li>Package description cannot be longer then 255 characters.</li>");
+			$("#package-description").addClass('errors');
+		}
+		
+		if(!errors)
+		{
+			$('#form-package').submit();
+		}
+		else
+		{
+			$(".errors").show();
+			$(window).scrollTop($('html').offset().top)
+		}
+	});
+                             
+    $('#cancel-package').click(function(){
+        window.location = '/admin/packages';
+    });
+
+});
+
+</script>
+{% endblock %}
+{% block content %}
+
+{% if allowed %}
+<div class="dashboard-utility">
+	{% if added %}
+	<h2>Package {% if edit %}Saved{% else %}Added{% endif %}</h2>
+	{% endif %}
+	<div class="errors packages">
+    <ul class="errors">
+    {% for error in errors %}
+    <li>{{error}}</li>
+    {% endfor %}
+    </ul>
+    </div>
+	<h2 class="sub-header">{% if edit %}Edit{% else %}Add{% endif %} Package</h2>
+	<div class="clear-float"></div>
+	<form action="{% if edit %}/admin/package/edit/{{package.id}}{% else %}/admin/package/add{% endif %}" method="POST" id="form-package">
+	{% csrf_token %}
+		<div class="input"><label>Package Name: </label><input type="text" name="package_name" value="{% if edit %}{{package.name}}{% else %}{{request.POST.package_name}}{% endif %}" /></div>
+		<div class="input"><label>Annual Price</label><input type="text" name="package_annual_price" value="{% if edit %}{{package.price|floatformat:2}}{% else %}{{request.POST.package_annual_price|floatformat:2}}{% endif %}" /></div>
+		<div class="input"><label>Per File Price</label><input type="text" name="package_per_file_price" value="{% if edit %}{% if package.per_file_price %}{{package.per_file_price|floatformat:2}}{% endif %}{% else %}{{request.POST.package_per_file_price|floatformat:2}}{% endif %}" /></div>
+		<div class="input">
+			<label>Pay Period</label>
+				<label class="autosize">Monthly:</label> <input class="autosize" type="radio" id="pay_period" name="pay_period" value="1" {% if edit %}{% if package.monthly %}checked="checked"{% endif %}{% endif %}/>
+				<label class="autosize">Quarterly:</label> <input class="autosize" type="radio" id="pay_period" name="pay_period" value="2" {% if edit %}{% if package.quarterly %}checked="checked"{% endif %}{% endif %}/>
+		</div>
+		<div class="input left">
+			<label>Package Description</label>
+			<textarea id="package-description" name="package_description">{% if edit %}{{package.description}}{% else %}{{request.POST.package_description}}{% endif %}</textarea>
+		</div>
+		<h2 class="sub-header">Reports <a id="check-all" href="#">(Check All)</a></h2>
+		<table id="includes">
+			<tr>
+				<th id="include">Include</th>
+				<th id="report-name">Report Name</th>
+			</tr>
+			{% for report in reports %}
+			<tr class="{% cycle 'odd' 'even' %}">
+				<td class="checkbox"><input type="checkbox" id="{{report.id}}" value="1" name="{{report.id}}" {% if edit %}{% if report in attached_reports %}checked="checked"{% endif %}{% else %}{% if report.id in attached_reports %}checked="checked"{% endif %}{% endif %}/></td>
+				<td><span>{{report.name}}</span></td>
+			</tr>
+			{% endfor %}
+		</table>
+    <div id="cancel-package" class="form-button">Cancel</div>
+	<div class="form-button" id="package-button">{% if edit %}Save{% else %}Add{% endif %} Package</div>
+	</form>
+</div>
+{% else %}
+<div>
+	Not allowed to view
+</div>
+
+{% endif %}
+{% endblock %}

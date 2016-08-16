@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+
+{% block scripts %}
+<link rel="stylesheet" href="/files/css/jquery.autocomplete.css"></link>
+<script type="text/javascript" src="/files/js/jquery.bgiframe.min.js"></script>
+<script type="text/javascript" src="/files/js/jquery.autocomplete.js"></script>
+
+<script type="text/javascript">
+	$(document).ready(function () {
+	
+		var options = { };
+		
+		$('input#search_user').autocomplete('/admin/ajax/find/user', {
+		
+			parse: function(data) {
+                return $.map(data, function(row) {
+                    return { data:row, value:row[1], result:row[0] };
+                });
+            }
+		}).result(function(e, data, value){
+			$('input#user').val(data[1]);
+		});
+		
+		$('#search-user-button').click(function(){
+
+			if($('input#user').val() != '') 
+			{
+				$('form#search-user').submit();
+			}
+		});
+	});
+	
+</script>
+
+{% endblock %}
+
+{%block title %}Users{% endblock %}
+
+{%block content %}
+
+{% if allowed %}
+	{% if users %}
+	<div class="dashboard-utility">
+		<div class="form-button"><a href="/admin/user/add">Add User</a></div>
+		<div id="search-user-div">
+			<form id="search-user" method="POST" action="/admin/users">
+			<input type="hidden" id="user" name="user" value=""/>
+			{% csrf_token %}
+			<input type="textbox" id="search_user" name="search_user" class="ui-autocomplete" value="{{search_user}}"/>
+			<div class="form-button" id="search-user-button">
+				Search
+			</div>
+			</form>
+			<div id="download-funds"><a href="/admin/download/users">Download User List</a></div>
+		</div>
+		
+	</div>
+	
+	<section id="user-data">
+		<table class="data">
+			<tr>
+				<th id="user-id" class="center">ID</th>
+				<th id="user-name">Username</th>
+				<th id="user-email">Email</th>
+				<th id="user-type">Type</th>
+			</tr>
+			{% for u in users %}
+			<tr class="{% cycle 'odd' 'even' %}">
+				<td class="center"><a href="/admin/user/edit/{{u.id}}">{{u.id}}</a></td>
+				<td><a href="/admin/user/edit/{{u.id}}">{{u.username}}</a></td>
+				<td><a href="/admin/user/edit/{{u.id}}">{{u.email}}</a></td>
+				<td><a href="/admin/user/edit/{{u.id}}">{{u.profile.user_type.type}}</a></td>
+			</tr>
+			{% endfor %}
+		</table>
+	</section>
+	{% endif %}
+{% else %}
+	<div class="dashboard-utility">
+		<h2>Invalid permissions.</h2>
+	</div>
+{% endif %}
+
+{% endblock %}

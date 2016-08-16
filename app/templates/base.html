@@ -1,0 +1,103 @@
+<!doctype html>  
+	<head>
+		<title>{% block title %}{% endblock %}</title>
+		<link href='http://fonts.googleapis.com/css?family=Lato:100,300,400' rel='stylesheet' type='text/css'>
+		<link href="/files/css/reset.css" rel="stylesheet" type="text/css"></link>
+		<link href="/files/css/ific.css" rel="stylesheet" type="text/css"></link>
+		<!--[if IE]>
+		<link href="/files/css/ific-ie.css" rel="stylesheet" type="text/css"></link>
+		<![endif]-->
+		<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.7/jquery.min.js"></script>
+		<script type="text/javascript">
+			document.createElement('header');
+			document.createElement('hgroup');
+			document.createElement('nav');
+			document.createElement('menu');
+			document.createElement('section');
+			document.createElement('article');
+			document.createElement('aside');
+			document.createElement('footer');
+			document.createElement('figcaption');
+			document.createElement('figure');
+		</script>
+		<script type="text/javascript">
+			$(document).ready(function() {
+										
+				$(window).resize(function() {
+					$("body").height($(document).height());
+				});
+										
+				$("body").height($(document).height());
+			});
+		</script>
+		{% block scripts %}{% endblock %}
+	</head>
+	<body>
+		<section id="header">
+			<div class="wrapper">
+				<a href="/"><img id="header-logo" src="/files/images/ific-logo.png"/></a>
+				<div id="header-right">
+						<div id="header-contact">
+								Call us
+								<span>416.309.2326</span>
+						</div>
+						<div class="clear-float"></div>
+						<div id="header-status">
+								{% if user.is_anonymous %}
+								<div id="header-login"><a href="/admin/login">Login</a></div>
+								<div id="header-welcome"><a href="/consumer/signup">Sign Up</a></div>
+								{% else %}
+								<div id="header-login"><a href="/admin/logout">Logout</a></div>
+								<div id="header-welcome"><a href="/consumer/profile">Welcome, {{user}}</a></div>
+								{% endif %}
+						</div>
+				</div>
+				<div class="clear-float"></div>
+			</div>
+		</section>
+		<section id="body">
+
+			<div class="wrapper">
+		
+				<div id="dashboard">
+					{% if user.id %}
+					<div id="dashboard-nav">
+					<ul>
+						<li class="first{%if url = 'stats'%} selected{% endif %}"><a href="/admin/statistics">Statistics</a></li>
+						<li{%if url = 'upload'%} class="selected"{% endif %}><a href="/admin/upload">Upload</a></li>
+						<li{%if url = 'reports'%} class="selected"{% endif %}><a href="/admin/reports">Reports</a></li>
+						<li{%if url = 'contributers'%} class="selected"{% endif %}><a href="/admin/groups">Groups</a></li>
+						<li{%if url = 'users'%} class="selected"{% endif %}><a href="/admin/users">Users</a></li>
+						<li{%if url = 'funds'%} class="selected"{% endif %}><a href="/admin/funds">Funds</a></li>
+						<li{%if url = 'packages'%} class="selected"{% endif %}><a href="/admin/packages">Packages</a></li>
+						<li class="last{%if url = 'utilities' %} selected{% endif %}"><a href="/admin/utilities">Utilities</a></li>
+					</ul>
+					</div>
+					{% else %}
+					<div id="header-no-nav">
+					</div>
+					{% endif %}
+					<div id="header-spacer"></div>
+					{% block content %}
+					{% endblock %}
+				</div>
+			</div>
+		</section>
+		<section id="footer">
+        <div class="wrapper">
+            <ul id="footer-nav">
+                <li><a href="/privacy">Privacy</a></li>
+                <li>|</li>
+                <li><a href="/">IFIC</a></li>
+            </ul>
+            <div id="footer-right">
+                <span>&copy; 2016 The Investment Funds Institute of Canada. All rights reserved.</span>
+                <span id="bottom">Site by <a href="http://playgroundinc.com" target="_blank">Playground.</a></span>
+            </div>
+            <div class="clear-float"></div>
+        </div>
+    </section>
+		
+		
+	</body>
+</html>
